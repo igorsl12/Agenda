@@ -1,11 +1,14 @@
 # Agenda Dinâmica Inteligente — Protótipo (Voz)
 
-App de **agenda de consultas médicas por voz**. Baseado no protótipo de design
-`Voice agenda app prototype.zip` (extraído em `__design_extract/`).
+App de **agenda de consultas médicas por voz**, em React Native + Expo.
 
 Fale naturalmente → o app simula a transcrição → extrai os dados da consulta
 (título, especialidade, data, horário, local, notas) → mostra uma tela de
-confirmação → salva localmente. Tudo funciona em **modo mock** (sem credenciais).
+confirmação → salva localmente. Hoje a voz/IA funciona em **modo mock** (sem
+credenciais); o `.env.example` já reserva chaves para uma integração real
+(Gemini/OpenAI) — ver [Próximos passos](#próximos-passos).
+
+> Status: protótipo de UI funcional, sem testes automatizados e sem CI configurado.
 
 ## Telas
 - **Onboarding** — boas-vindas com CTA "Começar".
@@ -17,18 +20,21 @@ confirmação → salva localmente. Tudo funciona em **modo mock** (sem credenci
 - **Histórico / Perfil** — stubs (abas inferiores).
 
 ## Stack
-- React Native + Expo (TypeScript)
-- NativeWind (Tailwind CSS) + `expo-linear-gradient` (gradientes azuis do design)
-- `expo-font` (Manrope)
+- React Native 0.74 + Expo SDK 51 (TypeScript)
+- NativeWind 4 (Tailwind CSS) + `expo-linear-gradient` (gradientes azuis do design)
+- `@expo-google-fonts/manrope`
 - AsyncStorage (persistência local das consultas)
 - react-native-svg (ícones)
 
 ## Como rodar
 ```bash
 npm install
-npx expo start          # Expo Dev Tools (Expo Go no celular / emulador)
+cp .env.example .env    # preencher se/quando a integração de voz real for ligada
+npx expo start           # Expo Dev Tools (Expo Go no celular / emulador)
 ```
 Web: `npx expo start --web` · iOS: `--ios` · Android: `--android`
+
+Checagem de tipos: `npm run typecheck`
 
 ## Estrutura
 ```
@@ -50,5 +56,6 @@ src/
 ```
 
 ## Próximos passos
-- Voz/IA real (`expo-av` + Whisper/OpenAI/Gemini) no lugar do mock.
-- Completar Histórico e Perfil; validar tema escuro; seed de consultas iniciais.
+- Voz/IA real (`expo-av` + Whisper/OpenAI/Gemini) no lugar do mock em `src/services/voiceService.ts`.
+- Completar Histórico e Perfil (hoje são stubs); validar tema escuro; seed de consultas iniciais.
+- Testes automatizados e CI — nenhum dos dois existe ainda.

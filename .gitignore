@@ -5,12 +5,42 @@
 
 # Dependências
 node_modules/
+.pnp
+.pnp.js
 
 # Expo / Metro
 .expo/
+.expo-shared/
 dist/
 web-build/
 __webcheck/
+expo-env.d.ts
+
+# Build nativo (gerado por `expo prebuild`)
+/ios/
+/android/
+
+# Testes / cobertura
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Cache
+.cache/
+.metro-health-check*
+
+# Editores / IDEs
+.vscode/
+.idea/
+*.swp
 
 # Artefatos de build do SO
 .DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo

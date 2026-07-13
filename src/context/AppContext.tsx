@@ -22,6 +22,12 @@ import {
   saveAppointments,
 } from '../storage/appointmentStorage';
 import {
+  DEFAULT_SETTINGS,
+  loadSettings,
+  saveSettings,
+  type UserSettings,
+} from '../storage/settingsStorage';
+import {
   colorForId,
   initialsFromTitle,
   statusStyle,
@@ -30,6 +36,16 @@ import {
   byDate,
 } from '../utils/appointmentUtils';
 import { voiceService } from '../services/voiceService';
+import { getProvider } from '../services/aiService';
+import {
+  extractAppointmentFromAudio,
+} from '../services/aiService';
+import {
+  startRecording,
+  stopRecording,
+  discardRecording,
+} from '../services/recorderService';
+import type { ParsedAppointment } from '../types';
 
 interface AppState {
   screen: ScreenName;
@@ -41,6 +57,10 @@ interface AppState {
   form: AppointmentForm;
   appointments: Appointment[];
 }
+
+/** Provedor resolvido uma vez no load (env é estático no bundle). */
+const AI_PROVIDER = getProvider();
+const IS_MOCK = AI_PROVIDER === 'mock';
 
 interface AppContextValue extends AppState {
   // navegação
@@ -66,6 +86,7 @@ interface AppContextValue extends AppState {
   confirmVoiceEvent: () => void;
   editVoiceEvent: () => void;
   backFromEdit: () => void;
+  voiceError: string | null;
   // form
   setField: (key: keyof AppointmentForm, val: string) => void;
   // helpers de view
@@ -80,6 +101,10 @@ interface AppContextValue extends AppState {
   loading: boolean;
   userName: string;
   editScreenTitle: string;
+  settings: UserSettings;
+  setUserName: (name: string) => void;
+  toggleNotifications: () => void;
+  toggleRemindOneHour: () => void;
 }
 
 const blankForm = (): AppointmentForm => ({
@@ -111,15 +136,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [historyFilter, setHistoryFilter] = useState<
     'todas' | 'Confirmado' | 'Pendente'
   >('todas');
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [parsedEvent, setParsedEvent] = useState<ParsedAppointment | null>(
+    null,
+  );
+  const [voiceTranscript, setVoiceTranscript] = useState('');
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
+
   useEffect(() => {
-    loadAppointments().then((list) => {
-      setAppointments(list);
-      setLoading(false);
-    });
+    Promise.all([loadAppointments(), loadSettings()]).then(
+      ([list, loadedSettings]) => {
+        setAppointments(list);
+        setSettings(loadedSettings);
+        setLoading(false);
+      },
+    );
   }, []);
+
+  const updateSettings = (patch: Partial<UserSettings>) => {
+    setSettings((prev) => {
+      const next = { ...prev, ...patch };
+      saveSettings(next);
+      return next;
+    });
+  };
+
+  const setUserName = (name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    updateSettings({ userName: trimmed });
+  };
+  const toggleNotifications = () =>
+    updateSettings({ notificationsEnabled: !settings.notificationsEnabled });
+  const toggleRemindOneHour = () =>
+    updateSettings({ remindOneHourBefore: !settings.remindOneHourBefore });
 
   const clearTimers = () => {
     timers.current.forEach((t) => clearTimeout(t));
@@ -220,11 +273,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ---- voz ----
-  const startVoice = () => {
-    clearTimers();
-    setListenPhase('listening');
-    setTranscriptShown('');
-    setScreen('listening');
+  /** Fluxo mock: transcrição fictícia digitada palavra a palavra. */
+  const startVoiceMock = () => {
     const words = voiceService.words();
     words.forEach((w, i) => {
       const t = setTimeout(() => {
@@ -235,19 +285,76 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const revealDone = 260 + words.length * 140 + 300;
     const t2 = setTimeout(() => setListenPhase('processing'), revealDone);
     timers.current.push(t2);
-    const t3 = setTimeout(() => setScreen('confirm'), revealDone + 1300);
+    const t3 = setTimeout(() => {
+      setParsedEvent(voiceService.extractEvent());
+      setVoiceTranscript(voiceService.fullTranscript());
+      setScreen('confirm');
+    }, revealDone + 1300);
     timers.current.push(t3);
   };
+
+  /** Fluxo real: grava o microfone até o usuário tocar em "Concluir". */
+  const startVoiceReal = async () => {
+    try {
+      await startRecording();
+    } catch (err: unknown) {
+      setVoiceError(
+        err instanceof Error ? err.message : 'Falha ao acessar o microfone.',
+      );
+    }
+  };
+
+  const startVoice = () => {
+    clearTimers();
+    setVoiceError(null);
+    setListenPhase('listening');
+    setTranscriptShown('');
+    setScreen('listening');
+    if (IS_MOCK) {
+      startVoiceMock();
+    } else {
+      void startVoiceReal();
+    }
+  };
+
   const cancelVoice = () => {
     clearTimers();
+    if (!IS_MOCK) void discardRecording();
+    setVoiceError(null);
     setScreen('home');
   };
+
+  /** Mock: pula direto para a confirmação. Real: para de gravar e processa. */
   const advanceNow = () => {
     clearTimers();
-    setScreen('confirm');
+    if (IS_MOCK) {
+      setParsedEvent(voiceService.extractEvent());
+      setVoiceTranscript(voiceService.fullTranscript());
+      setScreen('confirm');
+      return;
+    }
+    void (async () => {
+      setListenPhase('processing');
+      try {
+        const audio = await stopRecording();
+        const result = await extractAppointmentFromAudio(audio);
+        setParsedEvent(result.event);
+        setVoiceTranscript(result.transcript);
+        setTranscriptShown(result.transcript);
+        setScreen('confirm');
+      } catch (err: unknown) {
+        setVoiceError(
+          err instanceof Error
+            ? err.message
+            : 'Não consegui processar o áudio. Tente novamente.',
+        );
+        setListenPhase('listening');
+      }
+    })();
   };
+
   const confirmVoiceEvent = () => {
-    const parsed = voiceService.extractEvent();
+    const parsed = parsedEvent ?? voiceService.extractEvent();
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const created: Appointment = {
       ...parsed,
@@ -255,17 +362,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       date: parsed.date || isoToFriendly(parsed.dateISO || isoInDays(0)),
       dateISO: parsed.dateISO || isoInDays(0),
       status: 'Confirmado',
-      color: '#FCE7F3',
+      color: colorForId(id),
       initials: initialsFromTitle(parsed.title),
     };
     const next = [created, ...appointments];
     setAppointments(next);
     saveAppointments(next);
+    setParsedEvent(null);
     setScreen('home');
   };
   const editVoiceEvent = () => {
     setEditMode('voice-edit');
-    setForm({ ...voiceService.extractEvent() });
+    setForm({ ...(parsedEvent ?? voiceService.extractEvent()) });
     setScreen('edit');
   };
   const backFromEdit = () => {
@@ -280,7 +388,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const current =
     appointments.find((a) => a.id === selectedId) || null;
 
-  const parsed = voiceService.extractEvent();
+  const parsed = parsedEvent ?? voiceService.extractEvent();
 
   const historyFiltered = useMemo(() => {
     const filtered =
@@ -321,21 +429,31 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       confirmVoiceEvent,
       editVoiceEvent,
       backFromEdit,
+      voiceError,
       setField,
       current,
       parsed,
-      voiceTranscriptFull: voiceService.fullTranscript(),
+      voiceTranscriptFull:
+        voiceTranscript || voiceService.fullTranscript(),
       appointmentCountLabel: `${appointments.length} ${
         appointments.length === 1 ? 'consulta agendada' : 'consultas agendadas'
       }`,
       listenStatusLabel:
-        listenPhase === 'listening' ? 'Ouvindo...' : 'Processando...',
-      showManualAdvance: false,
+        listenPhase === 'listening'
+          ? IS_MOCK
+            ? 'Ouvindo...'
+            : 'Gravando... fale o compromisso'
+          : 'Processando...',
+      showManualAdvance: !IS_MOCK && listenPhase === 'listening' && !voiceError,
       isPhaseListening: listenPhase === 'listening',
       isPhaseProcessing: listenPhase === 'processing',
-      userName: 'Marina',
+      userName: settings.userName,
       editScreenTitle:
         editMode === 'edit-existing' ? 'Editar consulta' : 'Novo compromisso',
+      settings,
+      setUserName,
+      toggleNotifications,
+      toggleRemindOneHour,
     }),
     [
       screen,
@@ -350,6 +468,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       current,
       historyFilter,
       historyFiltered,
+      voiceError,
+      parsedEvent,
+      voiceTranscript,
+      settings,
     ],
   );
 

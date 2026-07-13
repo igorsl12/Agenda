@@ -32,7 +32,8 @@ export function CalendarScreen() {
   const byDay = (iso: string) =>
     appointments.filter((a) => a.dateISO === iso).sort(byDate);
 
-  const selectedISO = toISO(new Date());
+  const todayISO = toISO(new Date());
+  const [selectedISO, setSelectedISO] = React.useState(todayISO);
   const dayAppts = byDay(selectedISO);
 
   const shift = (delta: number) => {
@@ -77,12 +78,13 @@ export function CalendarScreen() {
               {cells.slice(r * 7, r * 7 + 7).map((iso, c) => {
                 if (!iso) return <View key={c} style={{ flex: 1 }} />;
                 const has = byDay(iso).length > 0;
-                const isToday = iso === selectedISO;
+                const isSelected = iso === selectedISO;
+                const isToday = iso === todayISO;
                 const num = fromISO(iso).getDate();
                 return (
-                  <Pressable key={c} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }} accessibilityLabel={`Dia ${num}`}>
-                    <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: isToday ? colors.accent : 'transparent' }}>
-                      <Text style={{ fontFamily: 'Manrope', fontWeight: isToday ? '800' : '600', fontSize: 13, color: isToday ? '#fff' : '#101B36' }}>{num}</Text>
+                  <Pressable key={c} onPress={() => setSelectedISO(iso)} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }} accessibilityRole="button" accessibilityLabel={`Dia ${num}`}>
+                    <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? colors.accent : 'transparent', borderWidth: isToday && !isSelected ? 1.5 : 0, borderColor: colors.accent }}>
+                      <Text style={{ fontFamily: 'Manrope', fontWeight: isSelected || isToday ? '800' : '600', fontSize: 13, color: isSelected ? '#fff' : isToday ? colors.accent : '#101B36' }}>{num}</Text>
                     </View>
                     {has ? <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.accent, marginTop: 3 }} /> : null}
                   </Pressable>
@@ -92,9 +94,11 @@ export function CalendarScreen() {
           ))}
         </View>
 
-        {/* Lista do dia selecionado (hoje) */}
+        {/* Lista do dia selecionado */}
         <View className="px-6 pt-4 pb-1 flex-row items-center justify-between">
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 16, color: '#101B36' }}>Hoje</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 16, color: '#101B36' }}>
+            {selectedISO === todayISO ? 'Hoje' : 'Dia selecionado'}
+          </Text>
           <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 12, color: '#64748B' }}>{isoToFriendly(selectedISO)}</Text>
         </View>
 
@@ -102,7 +106,7 @@ export function CalendarScreen() {
           {dayAppts.length === 0 ? (
             <View className="mt-10 items-center px-8">
               <Text style={{ fontFamily: 'Manrope', fontSize: 14, color: '#64748B', textAlign: 'center' }}>
-                Nenhuma consulta hoje. Use o microfone para agendar.
+                Nenhuma consulta neste dia. Use o microfone para agendar.
               </Text>
             </View>
           ) : (

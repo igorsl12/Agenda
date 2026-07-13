@@ -16,6 +16,8 @@ export function ListeningScreen() {
     isPhaseListening,
     advanceNow,
     showManualAdvance,
+    voiceError,
+    startVoice,
   } = useApp();
 
   const breathe = React.useRef(new Animated.Value(1)).current;
@@ -76,10 +78,10 @@ export function ListeningScreen() {
           </View>
 
           <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 18, color: '#101B36' }}>
-            {listenStatusLabel}
+            {voiceError ? 'Algo deu errado' : listenStatusLabel}
           </Text>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '500', fontSize: 15, lineHeight: 22, color: '#3B5B8C', maxWidth: 290, textAlign: 'center', minHeight: 60 }}>
-            {transcriptShown}
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '500', fontSize: 15, lineHeight: 22, color: voiceError ? '#B4232A' : '#3B5B8C', maxWidth: 290, textAlign: 'center', minHeight: 60 }}>
+            {voiceError ?? transcriptShown}
           </Text>
 
           {showManualAdvance && (
@@ -91,6 +93,18 @@ export function ListeningScreen() {
               accessibilityLabel="Concluir"
             >
               <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: colors.accent }}>Concluir</Text>
+            </Pressable>
+          )}
+
+          {voiceError && (
+            <Pressable
+              onPress={startVoice}
+              className="items-center justify-center rounded-full bg-white"
+              style={{ paddingVertical: 12, paddingHorizontal: 24, shadowColor: '#101B36', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } }}
+              accessibilityRole="button"
+              accessibilityLabel="Tentar novamente"
+            >
+              <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: colors.accent }}>Tentar novamente</Text>
             </Pressable>
           )}
         </View>

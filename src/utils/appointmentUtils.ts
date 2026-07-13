@@ -26,8 +26,10 @@ const AVATAR_COLORS = [
 
 /** Gera iniciais a partir do título (ex.: "Dra. Fernanda Lima" → "FL"). */
 export function initialsFromTitle(title: string): string {
-  const clean = title.replace(/\b(dra?\.?|dr\.?)\b/gi, '').trim();
-  const parts = clean.split(/\s+/).filter(Boolean);
+  const clean = title.replace(/\b(dra?|dr)\.?(\s|$)/gi, ' ').trim();
+  const parts = clean
+    .split(/\s+/)
+    .filter((w) => /\p{L}|\d/u.test(w[0] ?? ''));
   if (parts.length === 0) return '??';
   return parts
     .slice(0, 2)

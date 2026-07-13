@@ -2,22 +2,26 @@
 
 App de **agenda de consultas médicas por voz**, em React Native + Expo.
 
-Fale naturalmente → o app simula a transcrição → extrai os dados da consulta
-(título, especialidade, data, horário, local, notas) → mostra uma tela de
-confirmação → salva localmente. Hoje a voz/IA funciona em **modo mock** (sem
-credenciais); o `.env.example` já reserva chaves para uma integração real
-(Gemini/OpenAI) — ver [Próximos passos](#próximos-passos).
+Fale naturalmente → o app grava o áudio do microfone → a IA transcreve e
+extrai os dados da consulta (título, especialidade, data, horário, local,
+notas) → mostra uma tela de confirmação → salva localmente.
 
-> Status: protótipo de UI funcional, sem testes automatizados e sem CI configurado.
+**Voz real**: preencha `EXPO_PUBLIC_GEMINI_API_KEY` (ou `EXPO_PUBLIC_OPENAI_API_KEY`)
+no `.env` — o app auto-detecta o provedor. Sem chave, roda em **modo mock**
+(transcrição simulada, sem credenciais).
+
+> Status: funcional de ponta a ponta. Testes unitários da lógica pura (vitest); sem CI configurado.
 
 ## Telas
 - **Onboarding** — boas-vindas com CTA "Começar".
 - **Início (Home)** — lista de consultas em cartões, contador e botão "+".
-- **Escuta** — tela de microfone com pulso/processando e transcrição ao vivo (mock).
+- **Escuta** — grava o microfone (ou simula no mock); "Concluir" envia o áudio para a IA; erros com "Tentar novamente".
 - **Confirmação** — revisão do evento extraído da voz, com Editar/Confirmar.
 - **Detalhes** — cartão da consulta, dados e ações Editar / Cancelar.
 - **Edição** — formulário de nova consulta ou edição existente.
-- **Histórico / Perfil** — stubs (abas inferiores).
+- **Agenda** — calendário mensal com dias selecionáveis e lista do dia.
+- **Histórico** — busca + filtro por status.
+- **Perfil** — nome editável, tema claro/escuro/sistema, preferências persistidas.
 
 ## Stack
 - React Native 0.74 + Expo SDK 51 (TypeScript)
@@ -34,7 +38,7 @@ npx expo start           # Expo Dev Tools (Expo Go no celular / emulador)
 ```
 Web: `npx expo start --web` · iOS: `--ios` · Android: `--android`
 
-Checagem de tipos: `npm run typecheck`
+Checagem de tipos: `npm run typecheck` · Testes: `npm test`
 
 ## Estrutura
 ```
@@ -55,7 +59,17 @@ src/
 └─ screens/                  # Onboarding, Home, Listening, Confirm, Details, Edit, History, Profile
 ```
 
+## Arquitetura da voz
+```
+HomeScreen (FAB mic) → startVoice()
+  └─ recorderService (expo-av)  — grava m4a (nativo) / webm (web)
+       └─ aiService — Gemini (áudio → JSON em 1 chamada)
+                      ou OpenAI (Whisper transcreve → GPT extrai JSON)
+            └─ parseExtractionResponse() valida/normaliza (testado)
+                 └─ ConfirmScreen → salva no AsyncStorage
+```
+
 ## Próximos passos
-- Voz/IA real (`expo-av` + Whisper/OpenAI/Gemini) no lugar do mock em `src/services/voiceService.ts`.
-- Completar Histórico e Perfil (hoje são stubs); validar tema escuro; seed de consultas iniciais.
-- Testes automatizados e CI — nenhum dos dois existe ainda.
+- CI (GitHub Actions: typecheck + testes).
+- Notificações locais reais (expo-notifications) para os lembretes do Perfil.
+- Testes de componente/E2E das telas.

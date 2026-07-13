@@ -1,6 +1,6 @@
 // ProfileScreen.tsx — perfil do usuário (tema, configurações, ações).
 import React from 'react';
-import { View, Text, Pressable, Switch } from 'react-native';
+import { View, Text, Pressable, Switch, TextInput } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
 import { GradientBackground, Avatar } from '../components/ui';
@@ -29,7 +29,27 @@ function Row({ label, value, onPress, trailing }: { label: string; value?: strin
 
 export function ProfileScreen() {
   const { colors, mode, setMode, isDark } = useTheme();
-  const { userName, appointments, setTabHome } = useApp();
+  const {
+    userName,
+    appointments,
+    setTabHome,
+    setUserName,
+    settings,
+    toggleNotifications,
+    toggleRemindOneHour,
+  } = useApp();
+
+  const [isEditingName, setIsEditingName] = React.useState(false);
+  const [nameDraft, setNameDraft] = React.useState(userName);
+
+  const startEditName = () => {
+    setNameDraft(userName);
+    setIsEditingName(true);
+  };
+  const commitName = () => {
+    setUserName(nameDraft);
+    setIsEditingName(false);
+  };
 
   const modes: Mode[] = ['light', 'dark', 'system'];
   const modeLabel = mode === 'light' ? 'Claro' : mode === 'dark' ? 'Escuro' : 'Sistema';
@@ -47,7 +67,29 @@ export function ProfileScreen() {
 
         <View className="mt-4 items-center">
           <Avatar initials={(userName || 'U').slice(0, 2).toUpperCase()} color="#DCEAFF" size={84} />
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 20, color: '#101B36', marginTop: 12 }}>{userName}</Text>
+          {isEditingName ? (
+            <View className="flex-row items-center" style={{ marginTop: 12, gap: 8 }}>
+              <TextInput
+                value={nameDraft}
+                onChangeText={setNameDraft}
+                onSubmitEditing={commitName}
+                autoFocus
+                maxLength={40}
+                className="rounded-[12px] border bg-surface px-3"
+                style={{ height: 40, minWidth: 160, borderColor: 'rgba(59,130,246,0.3)', fontFamily: 'Manrope', fontWeight: '700', fontSize: 16, color: colors.ink, textAlign: 'center' }}
+                accessibilityLabel="Editar nome"
+              />
+              <Pressable onPress={commitName} accessibilityRole="button" accessibilityLabel="Salvar nome">
+                <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 14, color: colors.accent }}>Salvar</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable onPress={startEditName} accessibilityRole="button" accessibilityLabel="Editar nome">
+              <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 20, color: '#101B36', marginTop: 12 }}>
+                {userName} <Text style={{ fontSize: 13, color: colors.accent }}>editar</Text>
+              </Text>
+            </Pressable>
+          )}
           <Text style={{ fontFamily: 'Manrope', fontWeight: '500', fontSize: 14, color: '#64748B', marginTop: 2 }}>
             {appointments.length} consulta(s) agendada(s)
           </Text>
@@ -83,8 +125,8 @@ export function ProfileScreen() {
         </View>
 
         <View className="mt-4 mx-6 rounded-[20px] border bg-surface" style={{ borderColor: 'rgba(59,130,246,0.06)' }}>
-          <Row label="Notificações" trailing={<Switch value={true} disabled style={{ opacity: 0.6 }} />} />
-          <Row label="Lembrar 1h antes" trailing={<Switch value={true} disabled style={{ opacity: 0.6 }} />} />
+          <Row label="Notificações" trailing={<Switch value={settings.notificationsEnabled} onValueChange={toggleNotifications} />} />
+          <Row label="Lembrar 1h antes" trailing={<Switch value={settings.remindOneHourBefore} onValueChange={toggleRemindOneHour} />} />
           <Row label="Idioma" value="Português" />
           <Row label="Sobre" value="v0.1.0" />
         </View>

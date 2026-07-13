@@ -32,10 +32,19 @@ export function CalendarIcon({ color = '#2E6BF0' }: { color?: string }) {
   );
 }
 
-export function HistoryIcon({ color = '#2E6BF0' }: { color?: string }) {
+export function HistoryIcon({ size = 22, color = '#2E6BF0' }: { size?: number; color?: string }) {
   return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M4 6h16M4 12h16M4 18h10" stroke={color} strokeWidth={2} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function SearchOffIcon({ size = 28, color = '#9AA7BD' }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx={10.5} cy={10.5} r={6.5} stroke={color} strokeWidth={2} />
+      <Path d="M20 20l-4.5-4.5" stroke={color} strokeWidth={2} strokeLinecap="round" />
     </Svg>
   );
 }

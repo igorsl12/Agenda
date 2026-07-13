@@ -56,7 +56,7 @@ export function OnboardingScreen() {
           <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 16, color: colors.accent, marginTop: 4 }}>Dinâmica Inteligente</Text>
         </View>
         <Text style={{ fontFamily: 'Manrope', fontSize: 15, lineHeight: 24, color: '#64748B', maxWidth: 270, textAlign: 'center', marginTop: 2 }}>
-          Marque suas consultas médicas só com a sua voz. Fale naturalmente e a IA organiza tudo para você.
+          Marque seus compromissos só com a sua voz. Fale naturalmente e a IA organiza tudo para você.
         </Text>
         <Pressable
           onPress={goOnboardNext}

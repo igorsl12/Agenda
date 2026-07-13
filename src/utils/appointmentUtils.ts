@@ -47,7 +47,7 @@ export function isValidCategory(value: string): value is AppointmentCategory {
   return Object.prototype.hasOwnProperty.call(CATEGORY_META, value);
 }
 
-/** Paleta de cores de avatar para novas consultas. */
+/** Paleta de cores de avatar para novos compromissos. */
 const AVATAR_COLORS = [
   '#DCEAFF',
   '#FFF1E0',
@@ -78,10 +78,10 @@ export function colorForId(id: string): string {
   return AVATAR_COLORS[h % AVATAR_COLORS.length];
 }
 
-/** Label de contagem ("1 consulta agendada" / "3 consultas agendadas"). */
+/** Label de contagem ("1 compromisso agendado" / "3 compromissos agendados"). */
 export function countLabel(list: Appointment[]): string {
   const n = list.length;
-  return `${n} ${n === 1 ? 'consulta agendada' : 'consultas agendadas'}`;
+  return `${n} ${n === 1 ? 'compromisso agendado' : 'compromissos agendados'}`;
 }
 
 // ---- Datas ----
@@ -134,7 +134,7 @@ export function isoToFriendly(iso: string): string {
   return formatFriendly(fromISO(iso));
 }
 
-/** Compara consultas por data ISO e depois horário. */
+/** Compara compromissos por data ISO e depois horário. */
 export function byDate(
   a: Appointment,
   b: Appointment,

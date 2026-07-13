@@ -1,33 +1,39 @@
 # Agenda Dinâmica Inteligente — Protótipo (Voz)
 
-App de **agenda de consultas médicas por voz**, em React Native + Expo.
+App de **agenda de compromissos por voz** — consultas médicas, aulas, provas,
+treinos, reuniões, lazer e o que mais você precisar agendar — em React Native + Expo.
 
-Fale naturalmente → o app grava o áudio do microfone → a IA transcreve e
-extrai os dados da consulta (título, especialidade, data, horário, local,
+Fale naturalmente → o app grava o áudio do microfone → a IA transcreve, extrai
+os dados do compromisso (título, detalhes, data, horário, local, categoria,
 notas) → mostra uma tela de confirmação → salva localmente.
 
-**Voz real**: preencha `EXPO_PUBLIC_GEMINI_API_KEY` (ou `EXPO_PUBLIC_OPENAI_API_KEY`)
-no `.env` — o app auto-detecta o provedor. Sem chave, roda em **modo mock**
-(transcrição simulada, sem credenciais).
+**Voz real**: preencha `EXPO_PUBLIC_GEMINI_API_KEY`, `EXPO_PUBLIC_GROQ_API_KEY`
+ou `EXPO_PUBLIC_OPENAI_API_KEY` no `.env` — o app auto-detecta o provedor. Sem
+chave, roda em **modo mock** (transcrição simulada, sem credenciais).
 
 > Status: funcional de ponta a ponta. Testes unitários da lógica pura (vitest); sem CI configurado.
 
 ## Telas
 - **Onboarding** — boas-vindas com CTA "Começar".
-- **Início (Home)** — lista de consultas em cartões, contador e botão "+".
+- **Início (Home)** — lista de compromissos em cartões, contador e botão "+".
 - **Escuta** — grava o microfone (ou simula no mock); "Concluir" envia o áudio para a IA; erros com "Tentar novamente".
 - **Confirmação** — revisão do evento extraído da voz, com Editar/Confirmar.
-- **Detalhes** — cartão da consulta, dados e ações Editar / Cancelar.
-- **Edição** — formulário de nova consulta ou edição existente.
+- **Detalhes** — cartão do compromisso, dados e ações Editar / Cancelar.
+- **Edição** — formulário de novo compromisso ou edição existente, com seletor de categoria.
 - **Agenda** — calendário mensal com dias selecionáveis e lista do dia.
-- **Histórico** — busca + filtro por status.
-- **Perfil** — nome editável, tema claro/escuro/sistema, preferências persistidas.
+- **Histórico** — busca + filtro por status e por categoria.
+- **Perfil** — nome editável, tema claro/escuro/sistema, preferências persistidas (notificações/lembretes).
+
+## Categorias
+Saúde, Faculdade, Trabalho, Esporte, Lazer, Finanças, Outro — atribuídas manualmente
+na Edição ou inferidas automaticamente pela IA a partir da fala.
 
 ## Stack
 - React Native 0.74 + Expo SDK 51 (TypeScript)
 - NativeWind 4 (Tailwind CSS) + `expo-linear-gradient` (gradientes azuis do design)
 - `@expo-google-fonts/manrope`
-- AsyncStorage (persistência local das consultas)
+- AsyncStorage (persistência local dos compromissos e preferências)
+- expo-av (gravação de voz) + expo-notifications (lembretes locais)
 - react-native-svg (ícones)
 
 ## Como rodar
@@ -45,18 +51,24 @@ Checagem de tipos: `npm run typecheck` · Testes: `npm test`
 App.tsx                      # shell + roteador por tela (DeviceFrame)
 index.tsx                    # entrypoint + carrega fonte Manrope
 src/
-├─ types.ts                  # Appointment / ScreenName / TabName
+├─ types.ts                  # Appointment / AppointmentCategory / ScreenName / TabName
 ├─ theme/ThemeProvider.tsx   # tema claro/escuro (paleta azul + Manrope)
-├─ context/AppContext.tsx    # estado global (telas, abas, consultas, voz)
-├─ storage/appointmentStorage.ts
-├─ services/voiceService.ts  # mock de transcrição/extração
-├─ utils/appointmentUtils.ts # status, iniciais, cores
+├─ context/AppContext.tsx    # estado global (telas, abas, compromissos, voz, settings)
+├─ storage/
+│  ├─ appointmentStorage.ts  # persistência dos compromissos (+ seeds de demo)
+│  └─ settingsStorage.ts     # nome, notificações, lembretes
+├─ services/
+│  ├─ recorderService.ts     # gravação de áudio (expo-av)
+│  ├─ aiService.ts           # Gemini / Groq / OpenAI: áudio → evento estruturado
+│  ├─ voiceService.ts        # mock de transcrição/extração
+│  └─ notificationService.ts # lembretes locais (expo-notifications / web Notification)
+├─ utils/appointmentUtils.ts # status, categoria, iniciais, cores, datas
 ├─ components/
-│  ├─ ui.tsx                 # GradientBackground, Avatar, StatusBadge, GradientButton, ...
+│  ├─ ui.tsx                 # GradientBackground, Avatar, StatusBadge, CategoryBadge, ...
 │  ├─ icons.tsx              # ícones SVG
 │  ├─ AppointmentCard.tsx
 │  └─ BottomNav.tsx          # 5 abas + FAB de voz central
-└─ screens/                  # Onboarding, Home, Listening, Confirm, Details, Edit, History, Profile
+└─ screens/                  # Onboarding, Home, Listening, Confirm, Details, Edit, Calendar, History, Profile
 ```
 
 ## Arquitetura da voz

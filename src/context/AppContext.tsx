@@ -1,8 +1,8 @@
-// AppContext.tsx — estado global do app (telas, abas, consultas, voz).
+// AppContext.tsx — estado global do app (telas, abas, compromissos, voz).
 //
 // Reconstrói a lógica do protótipo de design (Draw Things "Voice Agenda App"):
 // fluxo onboarding → home → listening → confirm → detalhes/editação, com
-// persistência local das consultas e simulação de entrada por voz.
+// persistência local dos compromissos e simulação de entrada por voz.
 import React, {
   createContext,
   useContext,
@@ -75,7 +75,7 @@ interface AppContextValue extends AppState {
   setTabAgenda: () => void;
   setTabPerfil: () => void;
   openHistory: () => void;
-  // consultas
+  // compromissos
   selectAppointment: (id: string) => void;
   openAddNew: () => void;
   openEditExisting: (id?: string) => void;
@@ -163,7 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
-  // Reagenda lembretes quando consultas ou preferências mudam.
+  // Reagenda lembretes quando compromissos ou preferências mudam.
   useEffect(() => {
     if (loading) return;
     void syncAppointmentReminders(appointments, settings);
@@ -215,7 +215,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setScreen('historico');
   };
 
-  // ---- consultas ----
+  // ---- compromissos ----
   const selectAppointment = (id: string) => {
     setSelectedId(id);
     setScreen('details');
@@ -225,7 +225,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setForm(blankForm());
     setScreen('edit');
   };
-  // Usa `current` (consulta em tela) como fonte do id, tornando a ação
+  // Usa `current` (compromisso em tela) como fonte do id, tornando a ação
   // independente de possíveis dessincronizações de `selectedId`.
   const openEditExisting = (id?: string) => {
     const appt =
@@ -271,7 +271,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setScreen('details');
     } else {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const title = form.title || 'Nova consulta';
+      const title = form.title || 'Novo compromisso';
       const created: Appointment = {
         ...form,
         id,
@@ -457,7 +457,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       voiceTranscriptFull:
         voiceTranscript || voiceService.fullTranscript(),
       appointmentCountLabel: `${appointments.length} ${
-        appointments.length === 1 ? 'consulta agendada' : 'consultas agendadas'
+        appointments.length === 1 ? 'compromisso agendado' : 'compromissos agendados'
       }`,
       listenStatusLabel:
         listenPhase === 'listening'
@@ -470,7 +470,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isPhaseProcessing: listenPhase === 'processing',
       userName: settings.userName,
       editScreenTitle:
-        editMode === 'edit-existing' ? 'Editar consulta' : 'Novo compromisso',
+        editMode === 'edit-existing' ? 'Editar compromisso' : 'Novo compromisso',
       settings,
       setUserName,
       toggleNotifications,

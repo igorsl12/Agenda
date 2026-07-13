@@ -106,7 +106,7 @@ export function CalendarScreen() {
           {dayAppts.length === 0 ? (
             <View className="mt-10 items-center px-8">
               <Text style={{ fontFamily: 'Manrope', fontSize: 14, color: '#64748B', textAlign: 'center' }}>
-                Nenhuma consulta neste dia. Use o microfone para agendar.
+                Nenhum compromisso neste dia. Use o microfone para agendar.
               </Text>
             </View>
           ) : (

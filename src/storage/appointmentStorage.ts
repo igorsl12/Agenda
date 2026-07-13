@@ -1,4 +1,4 @@
-// appointmentStorage.ts — persistência local de consultas via AsyncStorage.
+// appointmentStorage.ts — persistência local de compromissos via AsyncStorage.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Appointment } from '../types';
 import { isoInDays } from '../utils/appointmentUtils';
@@ -6,7 +6,10 @@ import { isoInDays } from '../utils/appointmentUtils';
 const KEY = 'agenda.appointments';
 const SEED_FLAG = 'agenda.seeded.v1';
 
-/** Consultas iniciais de demonstração (espelham o protótipo de design). */
+/**
+ * Compromissos iniciais de demonstração — variados entre categorias para
+ * deixar claro que a agenda não é só de consultas médicas.
+ */
 function seedAppointments(): Appointment[] {
   const base = [
     {
@@ -20,14 +23,24 @@ function seedAppointments(): Appointment[] {
       offset: 0,
     },
     {
-      title: 'Exame de sangue',
-      specialty: 'Laboratório',
-      time: '07:45',
-      location: 'Lab Vida Saudável',
+      title: 'Prova de Cálculo II',
+      specialty: 'Cálculo II',
+      time: '08:00',
+      location: 'Bloco B, sala 204',
       status: 'Pendente' as const,
-      category: 'saude' as const,
-      notes: 'Jejum de 8 horas.',
+      category: 'faculdade' as const,
+      notes: 'Levar calculadora e caderno de fórmulas.',
       offset: 1,
+    },
+    {
+      title: 'Treino de futebol',
+      specialty: 'Futebol',
+      time: '18:30',
+      location: 'Quadra do bairro',
+      status: 'Confirmado' as const,
+      category: 'esporte' as const,
+      notes: 'Levar chuteira e garrafa de água.',
+      offset: 2,
     },
     {
       title: 'Retorno Dr. André Souza',
@@ -53,8 +66,8 @@ function seedAppointments(): Appointment[] {
       status: b.status,
       category: b.category,
       notes: b.notes,
-      color: ['#DCEAFF', '#FFF1E0', '#FCE7F3'][i % 3],
-      initials: ['FL', 'ES', 'AS'][i % 3],
+      color: ['#DCEAFF', '#E9E4FF', '#FFE7DA', '#FCE7F3'][i % 4],
+      initials: ['FL', 'CL', 'TF', 'AS'][i % 4],
     } as Appointment;
   });
 }
@@ -64,7 +77,7 @@ function withCategoryFallback(list: Appointment[]): Appointment[] {
   return list.map((a) => (a.category ? a : { ...a, category: 'outro' }));
 }
 
-/** Carrega as consultas salvas; seeds no primeiro launch. */
+/** Carrega os compromissos salvos; seeds no primeiro launch. */
 export async function loadAppointments(): Promise<Appointment[]> {
   try {
     const raw = await AsyncStorage.getItem(KEY);
@@ -85,7 +98,7 @@ export async function loadAppointments(): Promise<Appointment[]> {
   }
 }
 
-/** Sobrescreve a lista de consultas. Fire-and-forget tolerante a erros. */
+/** Sobrescreve a lista de compromissos. Fire-and-forget tolerante a erros. */
 export async function saveAppointments(list: Appointment[]): Promise<void> {
   try {
     await AsyncStorage.setItem(KEY, JSON.stringify(list));

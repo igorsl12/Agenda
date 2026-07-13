@@ -1,4 +1,4 @@
-// EditScreen.tsx — formulário de nova consulta ou edição.
+// EditScreen.tsx — formulário de novo compromisso ou edição.
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
@@ -28,8 +28,8 @@ export function EditScreen() {
         </View>
 
         <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingTop: 16, paddingBottom: 12, gap: 14 }}>
-          <Field label="Título" value={form.title} onChangeText={(v) => setField('title', v)} placeholder="Ex: Consulta com Dr. João" />
-          <Field label="Especialidade" value={form.specialty} onChangeText={(v) => setField('specialty', v)} placeholder="Ex: Cardiologista" />
+          <Field label="Título" value={form.title} onChangeText={(v) => setField('title', v)} placeholder="Ex: Consulta com Dr. João, Prova de Cálculo, Treino de futebol" />
+          <Field label="Detalhes" value={form.specialty} onChangeText={(v) => setField('specialty', v)} placeholder="Ex: Cardiologista, Disciplina, Modalidade" />
           <View className="flex-row" style={{ gap: 12 }}>
             <View className="flex-1">
               <Field label="Data" value={form.date} onChangeText={(v) => setField('date', v)} placeholder="Ex: Sexta-feira, 19 de julho" />

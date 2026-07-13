@@ -1,4 +1,4 @@
-// ThemeProvider.tsx — tema (claro/escuro) do app "Agenda de Consultas".
+// ThemeProvider.tsx — tema (claro/escuro) do app "Agenda".
 //
 // Paleta do protótipo de design (Voice Agenda App):
 //   - acento azul #2E6BF0 (gradiente 5B9CFF → 2E6BF0)

@@ -92,7 +92,7 @@ export function ProfileScreen() {
             </Pressable>
           )}
           <Text style={{ fontFamily: 'Manrope', fontWeight: '500', fontSize: 14, color: '#64748B', marginTop: 2 }}>
-            {appointments.length} consulta(s) agendada(s)
+            {appointments.length} compromisso(s) agendado(s)
           </Text>
         </View>
 

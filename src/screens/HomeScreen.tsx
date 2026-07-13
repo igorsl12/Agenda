@@ -1,4 +1,4 @@
-// HomeScreen.tsx — lista de consultas (tela principal "Início").
+// HomeScreen.tsx — lista de compromissos (tela principal "Início").
 import React from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,7 +31,7 @@ export function HomeScreen() {
             className="items-center justify-center rounded-[14px] border bg-white"
             style={{ width: 40, height: 40, borderColor: 'rgba(59,130,246,0.15)', shadowColor: colors.accent, shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}
             accessibilityRole="button"
-            accessibilityLabel="Adicionar consulta"
+            accessibilityLabel="Adicionar compromisso"
           >
             <PlusIcon color={colors.accent} />
           </Pressable>
@@ -55,7 +55,7 @@ export function HomeScreen() {
           {appointments.length === 0 ? (
             <View className="mt-20 items-center px-8">
               <Text style={{ fontFamily: 'Manrope', fontSize: 15, color: '#64748B', textAlign: 'center' }}>
-                Nenhuma consulta ainda. Toque no microfone e dite sua consulta.
+                Nenhum compromisso ainda. Toque no microfone e dite seu compromisso.
               </Text>
             </View>
           ) : (

@@ -7,17 +7,17 @@ import type { ParsedAppointment } from '../types';
 import { isoInDays } from '../utils/appointmentUtils';
 
 const TRANSCRIPT =
-  'Marca uma consulta com o Dr. Ricardo, dermatologista, quinta-feira às quatro da tarde, na Clínica Vida Saudável';
+  'Marca uma prova de Cálculo II quinta-feira às oito da manhã, no bloco B, sala 204';
 
 const PARSED: ParsedAppointment = {
-  title: 'Dr. Ricardo Alves',
-  specialty: 'Dermatologista',
+  title: 'Prova de Cálculo II',
+  specialty: 'Cálculo II',
   date: 'Quinta-feira, 18 de julho',
   dateISO: isoInDays(2),
-  time: '16:00',
-  location: 'Clínica Vida Saudável',
+  time: '08:00',
+  location: 'Bloco B, sala 204',
   notes: '',
-  category: 'saude',
+  category: 'faculdade',
 };
 
 export const voiceService = {

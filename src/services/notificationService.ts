@@ -1,10 +1,10 @@
-// notificationService.ts — lembretes de consulta.
+// notificationService.ts — lembretes de compromisso.
 //
 // Nativo (iOS/Android): expo-notifications com agendamento local real.
 // Web: Notification API do navegador + setTimeout (funciona enquanto a
 // aba estiver aberta — limitação da plataforma, suficiente p/ protótipo).
 //
-// Estratégia de sincronização: em vez de rastrear ids por consulta,
+// Estratégia de sincronização: em vez de rastrear ids por compromisso,
 // cancela tudo e reagenda a partir da lista atual — simples e à prova
 // de dessincronização.
 import { Platform } from 'react-native';
@@ -29,7 +29,7 @@ if (Platform.OS !== 'web') {
   });
 }
 
-/** Data/hora efetiva da consulta (dateISO + time HH:MM). */
+/** Data/hora efetiva do compromisso (dateISO + time HH:MM). */
 export function appointmentDateTime(appt: Appointment): Date | null {
   if (!appt.dateISO) return null;
   const date = fromISO(appt.dateISO);
@@ -93,7 +93,7 @@ function scheduleWeb(id: string, title: string, body: string, fireAt: Date) {
 
 /**
  * Reagenda todos os lembretes a partir do estado atual.
- * Chame sempre que consultas ou preferências mudarem.
+ * Chame sempre que compromissos ou preferências mudarem.
  */
 export async function syncAppointmentReminders(
   appointments: Appointment[],
@@ -115,7 +115,7 @@ export async function syncAppointmentReminders(
         : at;
       if (fireAt.getTime() <= now) continue;
 
-      const title = 'Lembrete de consulta';
+      const title = 'Lembrete de compromisso';
       const body = reminderBody(appt);
       if (Platform.OS === 'web') {
         scheduleWeb(appt.id, title, body, fireAt);

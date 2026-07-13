@@ -1,4 +1,4 @@
-// DetailsScreen.tsx — detalhes de uma consulta + ações editar/cancelar.
+// DetailsScreen.tsx — detalhes de um compromisso + ações editar/cancelar.
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
@@ -15,7 +15,7 @@ export function DetailsScreen() {
     return (
       <GradientBackground>
         <View className="flex-1 items-center justify-center">
-          <Text style={{ fontFamily: 'Manrope', color: '#64748B' }}>Consulta não encontrada.</Text>
+          <Text style={{ fontFamily: 'Manrope', color: '#64748B' }}>Compromisso não encontrado.</Text>
         </View>
       </GradientBackground>
     );
@@ -37,7 +37,7 @@ export function DetailsScreen() {
           >
             <BackIcon color={colors.ink} />
           </Pressable>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 19, color: colors.ink }}>Detalhes da consulta</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 19, color: colors.ink }}>Detalhes do compromisso</Text>
         </View>
 
         <View className="flex-1 px-6" style={{ paddingTop: 16, paddingBottom: 12, gap: 16 }}>
@@ -82,9 +82,9 @@ export function DetailsScreen() {
 
         {/* Ações fixas (sempre visíveis, fora do scroll) */}
         <View className="px-6 pb-6 pt-3 flex-col" style={{ gap: 10, borderTopWidth: 1, borderTopColor: 'rgba(59,130,246,0.08)' }}>
-          <OutlineButton label="Editar consulta" onPress={() => openEditExisting(current?.id)} />
-          <Pressable onPress={() => deleteSelected(current?.id)} className="items-center justify-center" style={{ height: 44 }} accessibilityRole="button" accessibilityLabel="Cancelar consulta">
-            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: '#DC4C4C' }}>Cancelar consulta</Text>
+          <OutlineButton label="Editar compromisso" onPress={() => openEditExisting(current?.id)} />
+          <Pressable onPress={() => deleteSelected(current?.id)} className="items-center justify-center" style={{ height: 44 }} accessibilityRole="button" accessibilityLabel="Cancelar compromisso">
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: '#DC4C4C' }}>Cancelar compromisso</Text>
           </Pressable>
         </View>
       </View>

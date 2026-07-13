@@ -1,4 +1,4 @@
-// AppointmentCard.tsx — cartão de consulta na lista (Home).
+// AppointmentCard.tsx — cartão de compromisso na lista (Home).
 import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';

@@ -36,7 +36,7 @@ export function ConfirmScreen() {
 
         <View className="mt-4 rounded-[20px] border bg-surface px-4 py-1.5" style={{ borderColor: 'rgba(59,130,246,0.06)', shadowColor: colors.accent, shadowOpacity: 0.08, shadowRadius: 24, shadowOffset: { width: 0, height: 10 } }}>
           <Row label="Título" value={parsed.title} />
-          <Row label="Especialidade" value={parsed.specialty} />
+          <Row label="Detalhes" value={parsed.specialty} />
           <Row label="Data" value={dateLabel} />
           <Row label="Horário" value={parsed.time} />
           <View className="flex-row items-center justify-between py-3.5">

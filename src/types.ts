@@ -1,4 +1,4 @@
-// types.ts — contratos de dados do app "Agenda de Consultas por Voz".
+// types.ts — contratos de dados do app "Agenda por Voz".
 
 export type AppointmentStatus = 'Confirmado' | 'Pendente';
 
@@ -13,12 +13,14 @@ export type AppointmentCategory =
   | 'outro';
 
 /**
- * Consulta médica agendada. Campos espelham o modelo do protótipo de design
+ * Compromisso agendado na agenda (consulta médica, aula, prova, treino,
+ * reunião, lazer etc.). Campos espelham o modelo do protótipo de design
  * (title, specialty, date, time, location, status, notes).
  */
 export interface Appointment {
   id: string;
   title: string;
+  /** Descrição curta abaixo do título (ex.: "Dermatologista", "Cálculo II", "Futebol"). */
   specialty: string;
   /** Data em texto livre (ex.: "Hoje", "Sexta-feira, 19 de julho"). */
   date: string;
@@ -42,7 +44,7 @@ export type AppointmentForm = Omit<
   'id' | 'status' | 'color' | 'initials'
 >;
 
-/** Evento "cru" retornado pela IA antes de virar consulta salva. */
+/** Evento "cru" retornado pela IA antes de virar compromisso salvo. */
 export type ParsedAppointment = AppointmentForm;
 
 export type ScreenName =

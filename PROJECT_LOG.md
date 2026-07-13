@@ -6,19 +6,25 @@ histórico e os próximos passos para retomada imediata em qualquer nova sessão
 ---
 
 ## 📌 Estado Atual do Projeto
-* **Descrição**: App de **agenda de consultas médicas por voz**. O usuário fala →
-  o app simula transcrição → extrai os dados da consulta (título, especialidade,
-  data, horário, local, notas) → mostra tela de confirmação → salva localmente.
-  Inclui lista de consultas, detalhes, edição, exclusão e barra de 5 abas
-  (Início, Agenda, FAB de voz, Histórico, Perfil).
+* **Descrição**: App de **agenda de compromissos por voz** (não só consultas
+  médicas — também faculdade, trabalho, esporte, lazer, finanças...). O usuário
+  fala → o app grava o áudio → a IA transcreve e extrai os dados do compromisso
+  (título, detalhes, data, horário, local, categoria, notas) → mostra tela de
+  confirmação → salva localmente. Inclui lista de compromissos, detalhes, edição,
+  exclusão, calendário mensal, histórico com busca/filtros e barra de 5 abas
+  (Início, Agenda, FAB de voz, Histórico, Perfil) sempre visível nas 4 telas de aba.
 * **Origem do design**: arquivo `Voice agenda app prototype.zip` (protótipo
-  "Draw Things" / `Voice Agenda App.dc.html`) extraído em `__design_extract/`.
-  O app foi **reaplicado do zero** sobre esse design (paleta azul #2E6BF0, fonte
-  Manrope, gradientes, cartões arredondados).
+  "Draw Things" / `Voice Agenda App.dc.html`) — artefatos de prototipagem já
+  removidos do repo; o app foi **reaplicado do zero** sobre esse design (paleta
+  azul #2E6BF0, fonte Manrope, gradientes, cartões arredondados).
 * **Tecnologias**: React Native + Expo + TypeScript, NativeWind (Tailwind),
-  expo-linear-gradient, @expo-google-fonts/manrope, AsyncStorage, react-native-svg.
-* **Estado de voz/IA**: **mock** (`src/services/voiceService.ts`) — transcrição e
-  evento estruturado fictícios, para protótipo sem credenciais.
+  expo-linear-gradient, @expo-google-fonts/manrope, AsyncStorage, react-native-svg,
+  expo-av (gravação de voz), expo-notifications (lembretes locais).
+* **Estado de voz/IA**: **real**, com fallback mock. `src/services/aiService.ts`
+  suporta Gemini, Groq e OpenAI (auto-detectado pela chave presente no `.env`);
+  sem nenhuma chave, cai no mock (`src/services/voiceService.ts`).
+* **Categorias**: Saúde, Faculdade, Trabalho, Esporte, Lazer, Finanças, Outro —
+  atribuídas manualmente (Edição) ou inferidas pela IA a partir da fala.
 
 ---
 
@@ -57,21 +63,31 @@ histórico e os próximos passos para retomada imediata em qualquer nova sessão
   voz→confirmar→salvar, detalhes→editar→salvar (com persistência), detalhes→cancelar
   (exclusão), calendário, histórico (busca/filtro), perfil (tema claro/escuro).
 
+### [13/07/2026] Voz real + categorias + agenda geral (não só saúde)
+* **Voz real**: `recorderService.ts` (expo-av) grava m4a/webm; `aiService.ts` fala
+  com Gemini (1 chamada multimodal) ou Groq/OpenAI (Whisper + chat) e valida/
+  normaliza a resposta (testado). Erros de gravação/permissão/API aparecem na
+  tela de Escuta com "Tentar novamente".
+* **Notificações reais**: `notificationService.ts` agenda lembretes locais
+  (expo-notifications nativo / Notification API no web), resincronizados sempre
+  que compromissos ou preferências mudam.
+* **Categorias**: novo campo `Appointment.category` (Saúde/Faculdade/Trabalho/
+  Esporte/Lazer/Finanças/Outro) — seletor na Edição, badge em Cartão/Detalhes/
+  Confirmação, filtro em chips no Histórico. IA já pede a categoria no prompt.
+* **Reposicionamento geral**: app deixou de ser só "consultas médicas" — textos,
+  seeds de demo e exemplos revisados para refletir uma agenda geral de eventos.
+* **HistoryScreen redesenhada**: filtros de status/categoria agrupados num card,
+  contagem de resultados, empty state com ícone e "Limpar filtros" (corrige um
+  espaço em branco grande que sobrava quando a lista ficava vazia).
+
 ---
 
 ## 🚀 Próximos Passos e Instruções Futuras
 
-1. **Voz/IA real**: trocar `voiceService` mock por `expo-av` (gravação) + Whisper/
-   OpenAI ou Gemini (extração estruturada). O `AppContext.startVoice` já orquestra
-   os estados (listening → processing → confirm).
-2. **Tema escuro em telas restantes**: validar contraste nas telas de edição e
+1. **Tema escuro em telas restantes**: validar contraste nas telas de edição e
    confirmar que todos os textos usam `colors.ink`/`colors.muted` (não hex fixo).
-3. **Scroll em Details**: conteúdo curto cabe sem scroll; se houver notas longas,
-   considerar `ScrollView` com `flex:1` + botões fixos (estrutura testada e ok).
-4. **Calendário**: navegação entre meses já funciona; adicionar seleção de dia para
-   filtrar consultas daquele dia, se desejado.
-5. **Limpeza**: pasta `__design_extract/` e `__webcheck/` são temporárias — remover
-   antes de commitar.
+2. **CI**: GitHub Actions rodando typecheck + `npm test` a cada push.
+3. **Testes de componente/E2E** das telas principais.
 
 ---
 

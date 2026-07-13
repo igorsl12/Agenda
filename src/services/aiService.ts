@@ -142,7 +142,7 @@ export function parseExtractionResponse(
   const title = str('title');
   if (!transcript && !title) {
     throw new Error(
-      'Não identifiquei um compromisso na fala. Diga, por exemplo: "Marca consulta com o Dr. Ricardo quinta às 16h".',
+      'Não identifiquei um compromisso na fala. Diga, por exemplo: "Marca consulta com o Dr. Ricardo quinta às 16h" ou "Prova de Cálculo sexta às 10h".',
     );
   }
 

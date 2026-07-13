@@ -45,6 +45,10 @@ import {
   stopRecording,
   discardRecording,
 } from '../services/recorderService';
+import {
+  ensureNotificationPermission,
+  syncAppointmentReminders,
+} from '../services/notificationService';
 import type { ParsedAppointment } from '../types';
 
 interface AppState {
@@ -156,6 +160,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  // Reagenda lembretes quando consultas ou preferências mudam.
+  useEffect(() => {
+    if (loading) return;
+    void syncAppointmentReminders(appointments, settings);
+  }, [appointments, settings, loading]);
+
   const updateSettings = (patch: Partial<UserSettings>) => {
     setSettings((prev) => {
       const next = { ...prev, ...patch };
@@ -169,8 +179,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!trimmed) return;
     updateSettings({ userName: trimmed });
   };
-  const toggleNotifications = () =>
-    updateSettings({ notificationsEnabled: !settings.notificationsEnabled });
+  const toggleNotifications = () => {
+    const enabling = !settings.notificationsEnabled;
+    if (enabling) void ensureNotificationPermission();
+    updateSettings({ notificationsEnabled: enabling });
+  };
   const toggleRemindOneHour = () =>
     updateSettings({ remindOneHourBefore: !settings.remindOneHourBefore });
 

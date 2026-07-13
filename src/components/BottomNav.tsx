@@ -75,13 +75,15 @@ export function BottomNav() {
         accessibilityRole="button"
         accessibilityLabel="Falar para agendar"
       >
+        {/* Ícone DENTRO do gradiente: no web, absolute pinta acima de irmãos estáticos. */}
         <LinearGradient
           colors={[colors.accentLight, colors.accent]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, borderRadius: 30 }}
-        />
-        <MicIcon size={24} color="#fff" />
+          style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, borderRadius: 30, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <MicIcon size={24} color="#fff" />
+        </LinearGradient>
       </Pressable>
       <TabButton label="Histórico" active={tab === 'historico'} onPress={openHistory} icon={(c) => <HistoryIcon color={c} />} />
       <TabButton label="Perfil" active={tab === 'perfil'} onPress={setTabPerfil} icon={(c) => <ProfileIcon color={c} />} />

@@ -1,6 +1,6 @@
 // ProfileScreen.tsx — perfil do usuário (tema, configurações, ações).
 import React from 'react';
-import { View, Text, Pressable, Switch, TextInput } from 'react-native';
+import { View, Text, Pressable, Switch, TextInput, ScrollView } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
 import { GradientBackground, Avatar } from '../components/ui';
@@ -65,6 +65,7 @@ export function ProfileScreen() {
           <View style={{ width: 40 }} />
         </View>
 
+        <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <View className="mt-4 items-center">
           <Avatar initials={(userName || 'U').slice(0, 2).toUpperCase()} color="#DCEAFF" size={84} />
           {isEditingName ? (
@@ -130,6 +131,7 @@ export function ProfileScreen() {
           <Row label="Idioma" value="Português" />
           <Row label="Sobre" value="v0.1.0" />
         </View>
+        </ScrollView>
 
         <BottomNav />
       </View>

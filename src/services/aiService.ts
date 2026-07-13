@@ -10,7 +10,7 @@ import type { ParsedAppointment } from '../types';
 import { isoToFriendly, toISO } from '../utils/appointmentUtils';
 import type { RecordedAudio } from './recorderService';
 
-export type AiProvider = 'mock' | 'gemini' | 'openai';
+export type AiProvider = 'mock' | 'gemini' | 'openai' | 'groq';
 
 export interface VoiceExtraction {
   transcript: string;
@@ -19,8 +19,8 @@ export interface VoiceExtraction {
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-const OPENAI_TRANSCRIBE_URL = 'https://api.openai.com/v1/audio/transcriptions';
-const OPENAI_CHAT_URL = 'https://api.openai.com/v1/chat/completions';
+const OPENAI_BASE_URL = 'https://api.openai.com/v1';
+const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 
 const env = (key: string): string =>
   (typeof process !== 'undefined' && process.env && process.env[key]) || '';
@@ -28,10 +28,16 @@ const env = (key: string): string =>
 /** Decide o provedor: explícito via env, senão auto-detecta pela chave. */
 export function getProvider(): AiProvider {
   const explicit = env('EXPO_PUBLIC_AI_PROVIDER').toLowerCase();
-  if (explicit === 'gemini' || explicit === 'openai' || explicit === 'mock') {
+  if (
+    explicit === 'gemini' ||
+    explicit === 'openai' ||
+    explicit === 'groq' ||
+    explicit === 'mock'
+  ) {
     return explicit;
   }
   if (env('EXPO_PUBLIC_GEMINI_API_KEY')) return 'gemini';
+  if (env('EXPO_PUBLIC_GROQ_API_KEY')) return 'groq';
   if (env('EXPO_PUBLIC_OPENAI_API_KEY')) return 'openai';
   return 'mock';
 }
@@ -192,27 +198,37 @@ function base64ToBlob(base64: string, mimeType: string): Blob {
   return new Blob([bytes], { type: mimeType });
 }
 
-async function extractWithOpenAI(audio: RecordedAudio): Promise<VoiceExtraction> {
-  const key = env('EXPO_PUBLIC_OPENAI_API_KEY');
-  const model = env('EXPO_PUBLIC_OPENAI_MODEL') || 'gpt-4o-mini';
+interface OpenAICompatibleConfig {
+  label: string;
+  baseUrl: string;
+  apiKey: string;
+  keyEnvName: string;
+  chatModel: string;
+  transcribeModel: string;
+}
 
-  // 1) Whisper: áudio → texto
+/** Fluxo Whisper + chat para qualquer API compatível com a da OpenAI (OpenAI, Groq...). */
+async function extractWithOpenAICompatible(
+  audio: RecordedAudio,
+  cfg: OpenAICompatibleConfig,
+): Promise<VoiceExtraction> {
+  // 1) Transcrição: áudio → texto
   const ext = audio.mimeType.includes('webm') ? 'webm' : 'm4a';
   const form = new FormData();
   form.append('file', base64ToBlob(audio.base64, audio.mimeType), `audio.${ext}`);
-  form.append('model', 'whisper-1');
+  form.append('model', cfg.transcribeModel);
   form.append('language', 'pt');
 
-  const trResponse = await fetch(OPENAI_TRANSCRIBE_URL, {
+  const trResponse = await fetch(`${cfg.baseUrl}/audio/transcriptions`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${key}` },
+    headers: { Authorization: `Bearer ${cfg.apiKey}` },
     body: form,
   });
   if (!trResponse.ok) {
     throw new Error(
       trResponse.status === 401
-        ? 'Chave da OpenAI inválida. Verifique EXPO_PUBLIC_OPENAI_API_KEY no .env.'
-        : `Falha na transcrição (OpenAI ${trResponse.status}). Tente novamente.`,
+        ? `Chave da ${cfg.label} inválida. Verifique ${cfg.keyEnvName} no .env.`
+        : `Falha na transcrição (${cfg.label} ${trResponse.status}). Tente novamente.`,
     );
   }
   const transcript: string = (await trResponse.json())?.text ?? '';
@@ -221,14 +237,14 @@ async function extractWithOpenAI(audio: RecordedAudio): Promise<VoiceExtraction>
   }
 
   // 2) Chat: texto → JSON estruturado
-  const chatResponse = await fetch(OPENAI_CHAT_URL, {
+  const chatResponse = await fetch(`${cfg.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${key}`,
+      Authorization: `Bearer ${cfg.apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model,
+      model: cfg.chatModel,
       temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
@@ -238,13 +254,38 @@ async function extractWithOpenAI(audio: RecordedAudio): Promise<VoiceExtraction>
     }),
   });
   if (!chatResponse.ok) {
-    throw new Error(`Falha na extração (OpenAI ${chatResponse.status}). Tente novamente.`);
+    throw new Error(
+      `Falha na extração (${cfg.label} ${chatResponse.status}). Tente novamente.`,
+    );
   }
   const content: string =
     (await chatResponse.json())?.choices?.[0]?.message?.content ?? '';
   const parsed = parseExtractionResponse(content, new Date());
-  // O Whisper é a fonte de verdade da transcrição.
+  // A transcrição dedicada é a fonte de verdade.
   return { ...parsed, transcript };
+}
+
+function openAIConfig(): OpenAICompatibleConfig {
+  return {
+    label: 'OpenAI',
+    baseUrl: OPENAI_BASE_URL,
+    apiKey: env('EXPO_PUBLIC_OPENAI_API_KEY'),
+    keyEnvName: 'EXPO_PUBLIC_OPENAI_API_KEY',
+    chatModel: env('EXPO_PUBLIC_OPENAI_MODEL') || 'gpt-4o-mini',
+    transcribeModel: 'whisper-1',
+  };
+}
+
+function groqConfig(): OpenAICompatibleConfig {
+  return {
+    label: 'Groq',
+    baseUrl: GROQ_BASE_URL,
+    apiKey: env('EXPO_PUBLIC_GROQ_API_KEY'),
+    keyEnvName: 'EXPO_PUBLIC_GROQ_API_KEY',
+    // gpt-oss: modelos abertos da OpenAI hospedados na Groq.
+    chatModel: env('EXPO_PUBLIC_GROQ_MODEL') || 'openai/gpt-oss-20b',
+    transcribeModel: 'whisper-large-v3',
+  };
 }
 
 /** Ponto de entrada: áudio gravado → compromisso estruturado. */
@@ -256,10 +297,12 @@ export async function extractAppointmentFromAudio(
     case 'gemini':
       return extractWithGemini(audio);
     case 'openai':
-      return extractWithOpenAI(audio);
+      return extractWithOpenAICompatible(audio, openAIConfig());
+    case 'groq':
+      return extractWithOpenAICompatible(audio, groqConfig());
     default:
       throw new Error(
-        'Nenhum provedor de IA configurado. Preencha EXPO_PUBLIC_GEMINI_API_KEY ou EXPO_PUBLIC_OPENAI_API_KEY no .env.',
+        'Nenhum provedor de IA configurado. Preencha EXPO_PUBLIC_GEMINI_API_KEY, EXPO_PUBLIC_GROQ_API_KEY ou EXPO_PUBLIC_OPENAI_API_KEY no .env.',
       );
   }
 }

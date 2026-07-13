@@ -15,6 +15,7 @@ function seedAppointments(): Appointment[] {
       time: '09:30',
       location: 'Hospital Santa Casa',
       status: 'Confirmado' as const,
+      category: 'saude' as const,
       notes: 'Levar exames anteriores e lista de medicamentos.',
       offset: 0,
     },
@@ -24,6 +25,7 @@ function seedAppointments(): Appointment[] {
       time: '07:45',
       location: 'Lab Vida Saudável',
       status: 'Pendente' as const,
+      category: 'saude' as const,
       notes: 'Jejum de 8 horas.',
       offset: 1,
     },
@@ -33,6 +35,7 @@ function seedAppointments(): Appointment[] {
       time: '14:30',
       location: 'Clínica Movimentar',
       status: 'Confirmado' as const,
+      category: 'saude' as const,
       notes: 'Trazer raio-X do joelho.',
       offset: 3,
     },
@@ -48,11 +51,17 @@ function seedAppointments(): Appointment[] {
       time: b.time,
       location: b.location,
       status: b.status,
+      category: b.category,
       notes: b.notes,
       color: ['#DCEAFF', '#FFF1E0', '#FCE7F3'][i % 3],
       initials: ['FL', 'ES', 'AS'][i % 3],
     } as Appointment;
   });
+}
+
+/** Preenche `category` em registros salvos antes desse campo existir. */
+function withCategoryFallback(list: Appointment[]): Appointment[] {
+  return list.map((a) => (a.category ? a : { ...a, category: 'outro' }));
 }
 
 /** Carrega as consultas salvas; seeds no primeiro launch. */
@@ -61,7 +70,9 @@ export async function loadAppointments(): Promise<Appointment[]> {
     const raw = await AsyncStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? (parsed as Appointment[]) : [];
+      return Array.isArray(parsed)
+        ? withCategoryFallback(parsed as Appointment[])
+        : [];
     }
     // Primeiro launch: popula com seeds e persiste.
     const seeded = seedAppointments();

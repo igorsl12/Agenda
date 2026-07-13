@@ -17,6 +17,7 @@ const PARSED: ParsedAppointment = {
   time: '16:00',
   location: 'Clínica Vida Saudável',
   notes: '',
+  category: 'saude',
 };
 
 export const voiceService = {

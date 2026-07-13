@@ -3,9 +3,9 @@ import React from 'react';
 import { View, Text, Pressable } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import type { Appointment } from '../types';
-import { Avatar, StatusBadge } from './ui';
+import { Avatar } from './ui';
 import { ChevronRight } from './icons';
-import { statusStyle, isoToFriendly } from '../utils/appointmentUtils';
+import { statusStyle, categoryStyle, isoToFriendly } from '../utils/appointmentUtils';
 
 export function AppointmentCard({
   appt,
@@ -16,6 +16,7 @@ export function AppointmentCard({
 }) {
   const { colors } = useTheme();
   const { bg, color } = statusStyle(appt.status);
+  const cat = categoryStyle(appt.category);
   return (
     <Pressable
       onPress={onPress}
@@ -55,6 +56,11 @@ export function AppointmentCard({
         >
           {appt.specialty} · {appt.date || isoToFriendly(appt.dateISO)}, {appt.time}
         </Text>
+        <View className="flex-row" style={{ gap: 6, marginTop: 6 }}>
+          <View style={{ backgroundColor: cat.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 10, color: cat.color }}>{cat.label}</Text>
+          </View>
+        </View>
       </View>
       <View className="flex-col items-end gap-2">
         <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>

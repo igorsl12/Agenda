@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import type {
   Appointment,
+  AppointmentCategory,
   AppointmentForm,
   ScreenName,
   TabName,
@@ -92,7 +93,8 @@ interface AppContextValue extends AppState {
   backFromEdit: () => void;
   voiceError: string | null;
   // form
-  setField: (key: keyof AppointmentForm, val: string) => void;
+  setField: (key: Exclude<keyof AppointmentForm, 'category'>, val: string) => void;
+  setCategory: (category: AppointmentCategory) => void;
   // helpers de view
   current: Appointment | null;
   parsed: AppointmentForm;
@@ -119,6 +121,7 @@ const blankForm = (): AppointmentForm => ({
   time: '',
   location: '',
   notes: '',
+  category: 'outro',
 });
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -239,6 +242,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       time: appt.time,
       location: appt.location,
       notes: appt.notes || '',
+      category: appt.category,
     });
     setScreen('edit');
   };
@@ -394,8 +398,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ---- form ----
-  const setField = (key: keyof AppointmentForm, val: string) => {
+  const setField = (key: Exclude<keyof AppointmentForm, 'category'>, val: string) => {
     setForm((prev) => ({ ...prev, [key]: val }));
+  };
+  const setCategory = (category: AppointmentCategory) => {
+    setForm((prev) => ({ ...prev, category }));
   };
 
   const current =
@@ -444,6 +451,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       backFromEdit,
       voiceError,
       setField,
+      setCategory,
       current,
       parsed,
       voiceTranscriptFull:

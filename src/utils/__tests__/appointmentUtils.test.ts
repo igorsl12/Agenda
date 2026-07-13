@@ -9,6 +9,9 @@ import {
   byDate,
   isoInDays,
   statusStyle,
+  categoryStyle,
+  isValidCategory,
+  CATEGORY_LIST,
 } from '../appointmentUtils';
 import type { Appointment } from '../../types';
 
@@ -67,6 +70,7 @@ describe('byDate', () => {
     time,
     location: '',
     status: 'Confirmado',
+    category: 'outro',
     color: '#fff',
     initials: 'T',
   });
@@ -88,5 +92,19 @@ describe('byDate', () => {
 describe('statusStyle', () => {
   it('returns distinct styles per status', () => {
     expect(statusStyle('Confirmado')).not.toEqual(statusStyle('Pendente'));
+  });
+});
+
+describe('categoryStyle / isValidCategory', () => {
+  it('gives every category in the list a distinct label and colors', () => {
+    const labels = CATEGORY_LIST.map((c) => categoryStyle(c).label);
+    expect(new Set(labels).size).toBe(CATEGORY_LIST.length);
+  });
+
+  it('validates known categories and rejects unknown strings', () => {
+    expect(isValidCategory('saude')).toBe(true);
+    expect(isValidCategory('outro')).toBe(true);
+    expect(isValidCategory('astrologia')).toBe(false);
+    expect(isValidCategory('')).toBe(false);
   });
 });

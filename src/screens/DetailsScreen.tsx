@@ -5,7 +5,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
 import { GradientBackground, OutlineButton, Avatar } from '../components/ui';
 import { BackIcon, ClockIcon, LocationIcon, CalendarIcon } from '../components/icons';
-import { statusStyle, isoToFriendly } from '../utils/appointmentUtils';
+import { statusStyle, categoryStyle, isoToFriendly } from '../utils/appointmentUtils';
 
 export function DetailsScreen() {
   const { colors } = useTheme();
@@ -22,6 +22,7 @@ export function DetailsScreen() {
   }
 
   const { bg, color } = statusStyle(current.status);
+  const cat = categoryStyle(current.category);
 
   return (
     <GradientBackground>
@@ -45,8 +46,13 @@ export function DetailsScreen() {
             <Avatar initials={current.initials} color={current.color} size={64} />
             <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: colors.ink, marginTop: 6, textAlign: 'center' }}>{current.title}</Text>
             <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 13.5, color: colors.muted }}>{current.specialty}</Text>
-            <View style={{ backgroundColor: bg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, marginTop: 4 }}>
-              <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 11, color }}>{current.status}</Text>
+            <View className="flex-row" style={{ gap: 8, marginTop: 4 }}>
+              <View style={{ backgroundColor: bg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 }}>
+                <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 11, color }}>{current.status}</Text>
+              </View>
+              <View style={{ backgroundColor: cat.bg, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 }}>
+                <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 11, color: cat.color }}>{cat.label}</Text>
+              </View>
             </View>
           </View>
 

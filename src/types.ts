@@ -2,6 +2,16 @@
 
 export type AppointmentStatus = 'Confirmado' | 'Pendente';
 
+/** Categoria do compromisso — usada para organização e filtro visual. */
+export type AppointmentCategory =
+  | 'saude'
+  | 'faculdade'
+  | 'trabalho'
+  | 'esporte'
+  | 'lazer'
+  | 'financas'
+  | 'outro';
+
 /**
  * Consulta médica agendada. Campos espelham o modelo do protótipo de design
  * (title, specialty, date, time, location, status, notes).
@@ -18,6 +28,7 @@ export interface Appointment {
   time: string;
   location: string;
   status: AppointmentStatus;
+  category: AppointmentCategory;
   /** Cor de fundo do avatar (hex). */
   color: string;
   /** Iniciais exibidas no avatar (ex.: "FL"). */

@@ -7,12 +7,16 @@ import { GradientBackground } from '../components/ui';
 import { AppointmentCard } from '../components/AppointmentCard';
 import { BottomNav } from '../components/BottomNav';
 import { cn } from '../utils/cn';
+import { CATEGORY_LIST, categoryStyle } from '../utils/appointmentUtils';
+import type { AppointmentCategory } from '../types';
 
 const FILTERS: { key: 'todas' | 'Confirmado' | 'Pendente'; label: string }[] = [
   { key: 'todas', label: 'Todas' },
   { key: 'Confirmado', label: 'Confirmadas' },
   { key: 'Pendente', label: 'Pendentes' },
 ];
+
+type CategoryFilter = 'todas' | AppointmentCategory;
 
 export function HistoryScreen() {
   const { colors } = useTheme();
@@ -24,15 +28,17 @@ export function HistoryScreen() {
     setTabHome,
   } = useApp();
   const [query, setQuery] = React.useState('');
+  const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>('todas');
 
-  const results = query.trim()
-    ? historyFiltered.filter(
-        (a) =>
-          a.title.toLowerCase().includes(query.toLowerCase()) ||
-          a.specialty.toLowerCase().includes(query.toLowerCase()) ||
-          a.location.toLowerCase().includes(query.toLowerCase()),
-      )
-    : historyFiltered;
+  const results = historyFiltered
+    .filter((a) => categoryFilter === 'todas' || a.category === categoryFilter)
+    .filter(
+      (a) =>
+        !query.trim() ||
+        a.title.toLowerCase().includes(query.toLowerCase()) ||
+        a.specialty.toLowerCase().includes(query.toLowerCase()) ||
+        a.location.toLowerCase().includes(query.toLowerCase()),
+    );
 
   return (
     <GradientBackground>
@@ -73,6 +79,34 @@ export function HistoryScreen() {
             );
           })}
         </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6 pb-3" contentContainerStyle={{ gap: 8 }}>
+          <Pressable
+            onPress={() => setCategoryFilter('todas')}
+            className="items-center justify-center rounded-full border px-4"
+            style={{ height: 32, backgroundColor: categoryFilter === 'todas' ? colors.accent : 'transparent', borderColor: categoryFilter === 'todas' ? colors.accent : 'rgba(16,27,54,0.12)' }}
+            accessibilityRole="button"
+            accessibilityLabel="Todas as categorias"
+          >
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12, color: categoryFilter === 'todas' ? '#fff' : colors.muted }}>Todas categorias</Text>
+          </Pressable>
+          {CATEGORY_LIST.map((c) => {
+            const meta = categoryStyle(c);
+            const active = categoryFilter === c;
+            return (
+              <Pressable
+                key={c}
+                onPress={() => setCategoryFilter(c)}
+                className="items-center justify-center rounded-full border px-4"
+                style={{ height: 32, backgroundColor: active ? meta.bg : 'transparent', borderColor: active ? meta.color : 'rgba(16,27,54,0.12)' }}
+                accessibilityRole="button"
+                accessibilityLabel={`Categoria ${meta.label}`}
+              >
+                <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12, color: active ? meta.color : colors.muted }}>{meta.label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
         <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingTop: 4, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
           {results.length === 0 ? (

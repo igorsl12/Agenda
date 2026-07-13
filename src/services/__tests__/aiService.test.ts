@@ -72,6 +72,7 @@ describe('parseExtractionResponse', () => {
     time: '16:00',
     location: 'Clínica Vida Saudável',
     notes: '',
+    category: 'saude',
   });
 
   it('parses a valid response into a structured event', () => {
@@ -82,6 +83,24 @@ describe('parseExtractionResponse', () => {
     expect(result.event.time).toBe('16:00');
     expect(result.event.location).toBe('Clínica Vida Saudável');
     expect(result.event.date).toContain('16 de julho');
+    expect(result.event.category).toBe('saude');
+  });
+
+  it('falls back to "outro" when category is missing or unknown', () => {
+    const noCategory = JSON.stringify({ transcript: 'algo', title: 'Algo' });
+    expect(parseExtractionResponse(noCategory, NOW).event.category).toBe('outro');
+
+    const badCategory = JSON.stringify({
+      transcript: 'algo',
+      title: 'Algo',
+      category: 'astrologia',
+    });
+    expect(parseExtractionResponse(badCategory, NOW).event.category).toBe('outro');
+  });
+
+  it('accepts a known category case-insensitively', () => {
+    const raw = JSON.stringify({ transcript: 'prova', title: 'Prova', category: 'FACULDADE' });
+    expect(parseExtractionResponse(raw, NOW).event.category).toBe('faculdade');
   });
 
   it('parses a response wrapped in markdown fences', () => {
@@ -134,6 +153,13 @@ describe('buildExtractionPrompt', () => {
     expect(prompt).toContain('2026-07-13');
     expect(prompt).toContain('segunda-feira');
     expect(prompt).toContain('dateISO');
+  });
+
+  it('lists all known categories', () => {
+    const prompt = buildExtractionPrompt(NOW);
+    expect(prompt).toContain('"saude"');
+    expect(prompt).toContain('"faculdade"');
+    expect(prompt).toContain('"outro"');
   });
 });
 

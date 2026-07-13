@@ -1,5 +1,5 @@
-// appointmentUtils.ts — helpers de cores, iniciais, status e datas.
-import type { Appointment, AppointmentStatus } from '../types';
+// appointmentUtils.ts — helpers de cores, iniciais, status, categoria e datas.
+import type { Appointment, AppointmentCategory, AppointmentStatus } from '../types';
 
 /** Cores de fundo de avatar por status (do protótipo de design). */
 export const STATUS_STYLE: Record<
@@ -12,6 +12,39 @@ export const STATUS_STYLE: Record<
 
 export function statusStyle(status: AppointmentStatus) {
   return STATUS_STYLE[status] || STATUS_STYLE.Pendente;
+}
+
+/** Metadados de categoria (label + cores) para badges e chips de filtro. */
+export const CATEGORY_META: Record<
+  AppointmentCategory,
+  { label: string; bg: string; color: string }
+> = {
+  saude: { label: 'Saúde', bg: '#E7F6EC', color: '#1F9254' },
+  faculdade: { label: 'Faculdade', bg: '#E9E4FF', color: '#5B3DE0' },
+  trabalho: { label: 'Trabalho', bg: '#DCEAFF', color: '#2E6BF0' },
+  esporte: { label: 'Esporte', bg: '#FFE7DA', color: '#D2621F' },
+  lazer: { label: 'Lazer', bg: '#FCE7F3', color: '#C22E82' },
+  financas: { label: 'Finanças', bg: '#FFF3D9', color: '#B7791F' },
+  outro: { label: 'Outro', bg: '#E7ECF3', color: '#5A6781' },
+};
+
+export const CATEGORY_LIST: AppointmentCategory[] = [
+  'saude',
+  'faculdade',
+  'trabalho',
+  'esporte',
+  'lazer',
+  'financas',
+  'outro',
+];
+
+export function categoryStyle(category: AppointmentCategory) {
+  return CATEGORY_META[category] || CATEGORY_META.outro;
+}
+
+/** Valida se a string é uma categoria conhecida. */
+export function isValidCategory(value: string): value is AppointmentCategory {
+  return Object.prototype.hasOwnProperty.call(CATEGORY_META, value);
 }
 
 /** Paleta de cores de avatar para novas consultas. */

@@ -6,8 +6,14 @@
 //
 // As funções de parsing/normalização são puras e testadas em
 // src/services/__tests__/aiService.test.ts.
-import type { ParsedAppointment } from '../types';
-import { isoToFriendly, toISO } from '../utils/appointmentUtils';
+import type { AppointmentCategory, ParsedAppointment } from '../types';
+import {
+  CATEGORY_LIST,
+  CATEGORY_META,
+  isValidCategory,
+  isoToFriendly,
+  toISO,
+} from '../utils/appointmentUtils';
 import type { RecordedAudio } from './recorderService';
 
 export type AiProvider = 'mock' | 'gemini' | 'openai' | 'groq';
@@ -56,24 +62,29 @@ const PT_WEEKDAYS = [
   'sábado',
 ];
 
+const CATEGORY_OPTIONS = CATEGORY_LIST.map(
+  (c) => `"${c}" (${CATEGORY_META[c].label})`,
+).join(', ');
+
 /** Prompt de extração. `now` injetável para testes determinísticos. */
 export function buildExtractionPrompt(now: Date): string {
   const todayISO = toISO(now);
   const weekday = PT_WEEKDAYS[now.getDay()];
   return [
-    'Você é um assistente que agenda compromissos médicos a partir da fala do usuário (português do Brasil).',
+    'Você é um assistente que agenda compromissos a partir da fala do usuário (português do Brasil).',
     `Hoje é ${weekday}, ${todayISO}.`,
     'Analise a fala e devolva SOMENTE um objeto JSON válido, sem markdown, com os campos:',
     '{',
     '  "transcript": "transcrição fiel da fala",',
-    '  "title": "nome do profissional ou do compromisso (ex.: Dr. Ricardo Alves, Exame de sangue)",',
-    '  "specialty": "especialidade ou tipo (ex.: Dermatologista, Laboratório)",',
+    '  "title": "nome do profissional ou do compromisso (ex.: Dr. Ricardo Alves, Exame de sangue, Prova de Cálculo)",',
+    '  "specialty": "especialidade ou tipo (ex.: Dermatologista, Laboratório, Disciplina), ou string vazia",',
     '  "dateISO": "data do compromisso em YYYY-MM-DD (resolva termos relativos como amanhã ou quinta-feira a partir de hoje; dias da semana referem-se à PRÓXIMA ocorrência)",',
     '  "time": "horário em HH:MM de 24h (ex.: quatro da tarde = 16:00)",',
     '  "location": "local citado, ou string vazia",',
-    '  "notes": "observações extras citadas, ou string vazia"',
+    '  "notes": "observações extras citadas, ou string vazia",',
+    `  "category": "uma destas categorias que melhor descreve o compromisso: ${CATEGORY_OPTIONS}"`,
     '}',
-    'Se algum campo não for citado na fala, use string vazia — nunca invente dados.',
+    'Se algum campo não for citado na fala, use string vazia — nunca invente dados. A categoria é obrigatória; se não for óbvia, use "outro".',
   ].join('\n');
 }
 
@@ -136,6 +147,10 @@ export function parseExtractionResponse(
   }
 
   const dateISO = isValidISODate(str('dateISO')) ? str('dateISO') : toISO(now);
+  const rawCategory = str('category').toLowerCase();
+  const category: AppointmentCategory = isValidCategory(rawCategory)
+    ? rawCategory
+    : 'outro';
 
   const event: ParsedAppointment = {
     title: title || 'Novo compromisso',
@@ -145,6 +160,7 @@ export function parseExtractionResponse(
     time: normalizeTime(str('time')),
     location: str('location'),
     notes: str('notes'),
+    category,
   };
 
   return { transcript: transcript || title, event };

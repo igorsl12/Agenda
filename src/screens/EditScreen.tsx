@@ -5,10 +5,11 @@ import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
 import { GradientBackground, Field, GradientButton } from '../components/ui';
 import { BackIcon } from '../components/icons';
+import { CATEGORY_LIST, categoryStyle } from '../utils/appointmentUtils';
 
 export function EditScreen() {
   const { colors } = useTheme();
-  const { form, editMode, editScreenTitle, setField, saveForm, backFromEdit } = useApp();
+  const { form, editMode, editScreenTitle, setField, setCategory, saveForm, backFromEdit } = useApp();
 
   return (
     <GradientBackground>
@@ -38,6 +39,36 @@ export function EditScreen() {
             </View>
           </View>
           <Field label="Local" value={form.location} onChangeText={(v) => setField('location', v)} placeholder="Ex: Clínica Vida Saudável" />
+
+          <View className="flex-col gap-[6px]">
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12, color: colors.muted }}>Categoria</Text>
+            <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+              {CATEGORY_LIST.map((c) => {
+                const meta = categoryStyle(c);
+                const active = form.category === c;
+                return (
+                  <Pressable
+                    key={c}
+                    onPress={() => setCategory(c)}
+                    className="items-center justify-center rounded-full border"
+                    style={{
+                      height: 34,
+                      paddingHorizontal: 14,
+                      backgroundColor: active ? meta.bg : 'transparent',
+                      borderColor: active ? meta.color : 'rgba(16,27,54,0.12)',
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Categoria ${meta.label}`}
+                  >
+                    <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12.5, color: active ? meta.color : colors.muted }}>
+                      {meta.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
           <Field label="Notas" value={form.notes ?? ''} onChangeText={(v) => setField('notes', v)} placeholder="Alguma observação?" multiline />
         </ScrollView>
 

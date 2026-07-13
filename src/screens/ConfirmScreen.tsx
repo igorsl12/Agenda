@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
-import { GradientBackground, GradientButton, OutlineButton } from '../components/ui';
+import { GradientBackground, GradientButton, OutlineButton, CategoryBadge } from '../components/ui';
 import { isoToFriendly } from '../utils/appointmentUtils';
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -24,6 +24,9 @@ export function ConfirmScreen() {
     <GradientBackground>
       <ScrollView className="flex-1" contentContainerStyle={{ paddingTop: 64, paddingHorizontal: 24, paddingBottom: 28 }}>
         <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 22, color: '#101B36' }}>Confirme o compromisso</Text>
+        <View style={{ marginTop: 10 }}>
+          <CategoryBadge category={parsed.category} />
+        </View>
         <View
           className="mt-3.5 rounded-[14px] border bg-surface px-3.5 py-3"
           style={{ borderColor: 'rgba(59,130,246,0.10)' }}

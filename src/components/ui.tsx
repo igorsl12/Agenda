@@ -4,8 +4,8 @@ import React from 'react';
 import { View, Text, Pressable, TextInput, type TextInputProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeProvider';
-import { statusStyle } from '../utils/appointmentUtils';
-import type { AppointmentStatus } from '../types';
+import { categoryStyle, statusStyle } from '../utils/appointmentUtils';
+import type { AppointmentCategory, AppointmentStatus } from '../types';
 import { cn } from '../utils/cn';
 
 /** Fundo em gradiente azulado (acento claro → branco/escuro). */
@@ -93,6 +93,33 @@ export function StatusBadge({ status }: { status: AppointmentStatus }) {
         }}
       >
         {status}
+      </Text>
+    </View>
+  );
+}
+
+/** Etiqueta de categoria (Saúde/Faculdade/...) com cor de fundo própria. */
+export function CategoryBadge({ category }: { category: AppointmentCategory }) {
+  const { bg, color, label } = categoryStyle(category);
+  return (
+    <View
+      style={{
+        backgroundColor: bg,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 999,
+        alignSelf: 'flex-start',
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: 'Manrope',
+          fontWeight: '700',
+          fontSize: 10.5,
+          color,
+        }}
+      >
+        {label}
       </Text>
     </View>
   );

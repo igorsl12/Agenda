@@ -1,0 +1,49 @@
+/* global.css — diretivas Tailwind injetadas pelo NativeWind em runtime. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Tokens de tema (claro/escuro) via variáveis CSS ----
+   Os canais são RGB separados por espaço para suportar o modificador de
+   opacidade do Tailwind (ex.: bg-accent/10) através de <alpha-value>. */
+:root {
+  --color-canvas: 247 251 255;   /* fundo claro (quase branco azulado) */
+  --color-ink: 16 27 54;         /* #101B36 texto primário */
+  --color-accent: 46 107 240;    /* #2E6BF0 azul do design */
+  --color-hairline: 224 232 245; /* borda sutil clara */
+  --color-muted: 100 116 139;    /* #64748B texto secundário */
+  --color-surface: 255 255 255;  /* cartões claros */
+}
+.dark {
+  --color-canvas: 10 16 32;      /* #0A1020 fundo escuro */
+  --color-ink: 234 242 255;      /* #EAF2FF texto primário */
+  --color-accent: 91 156 255;    /* #5B9CFF azul claro do design */
+  --color-hairline: 38 48 70;    /* borda sutil escura */
+  --color-muted: 142 155 180;    /* texto secundário escuro */
+  --color-surface: 20 28 46;     /* #141C2E cartão escuro */
+}
+
+/* Reset mínimo: remove margens e garante fonte base limpa. */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+}
+
+/* No web, o Expo estica o #root pela viewport inteira. Para dar aparência de
+   celular, o body fica com fundo cinza e o app (limitado em largura no App.tsx)
+   é centralizado, simulando um device. (O App também define o fundo via JS
+   conforme o tema, então isto é apenas o fallback.) */
+html,
+body {
+  background-color: #e8e8ed;
+  min-height: 100%;
+}
+
+#root {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  height: 100%;
+}

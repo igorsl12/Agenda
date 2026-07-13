@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Agenda Inteligente",
+    "slug": "agenda-dinamica-inteligente",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F5F7"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.agenda"
+    },
+    "android": {
+      "package": "com.example.agenda",
+      "adaptiveIcon": {
+        "backgroundColor": "#F5F5F7"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

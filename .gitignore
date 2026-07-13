@@ -1,0 +1,16 @@
+# Secrets / env locais — NUNCA commite com chaves reais.
+.env
+.env.local
+.env.*.local
+
+# Dependências
+node_modules/
+
+# Expo / Metro
+.expo/
+dist/
+web-build/
+__webcheck/
+
+# Artefatos de build do SO
+.DS_Store

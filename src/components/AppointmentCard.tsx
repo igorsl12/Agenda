@@ -1,0 +1,67 @@
+// AppointmentCard.tsx — cartão de consulta na lista (Home).
+import React from 'react';
+import { View, Text, Pressable } from 'react-native';
+import { useTheme } from '../theme/ThemeProvider';
+import type { Appointment } from '../types';
+import { Avatar, StatusBadge } from './ui';
+import { ChevronRight } from './icons';
+import { statusStyle, isoToFriendly } from '../utils/appointmentUtils';
+
+export function AppointmentCard({
+  appt,
+  onPress,
+}: {
+  appt: Appointment;
+  onPress: () => void;
+}) {
+  const { colors } = useTheme();
+  const { bg, color } = statusStyle(appt.status);
+  return (
+    <Pressable
+      onPress={onPress}
+      className="mb-3 flex-row items-center gap-3.5 rounded-[20px] border bg-surface p-4 active:opacity-90"
+      style={{
+        borderColor: 'rgba(59,130,246,0.06)',
+        shadowColor: colors.accent,
+        shadowOpacity: 0.08,
+        shadowRadius: 24,
+        shadowOffset: { width: 0, height: 10 },
+      }}
+      accessibilityRole="button"
+      accessibilityLabel={appt.title}
+    >
+      <Avatar initials={appt.initials} color={appt.color} size={48} />
+      <View className="flex-1" style={{ minWidth: 0 }}>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontFamily: 'Manrope',
+            fontWeight: '700',
+            fontSize: 15,
+            color: colors.ink,
+          }}
+        >
+          {appt.title}
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={{
+            fontFamily: 'Manrope',
+            fontWeight: '500',
+            fontSize: 13,
+            color: colors.muted,
+            marginTop: 2,
+          }}
+        >
+          {appt.specialty} · {appt.date || isoToFriendly(appt.dateISO)}, {appt.time}
+        </Text>
+      </View>
+      <View className="flex-col items-end gap-2">
+        <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 10.5, color }}>{appt.status}</Text>
+        </View>
+        <ChevronRight />
+      </View>
+    </Pressable>
+  );
+}

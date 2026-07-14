@@ -20,7 +20,7 @@ function TabButton({
   icon: (color: string) => React.ReactNode;
 }) {
   const { colors } = useTheme();
-  const color = active ? colors.accent : '#9AA7BD';
+  const color = active ? colors.accent : colors.muted;
   return (
     <Pressable
       onPress={onPress}
@@ -44,16 +44,16 @@ function TabButton({
 }
 
 export function BottomNav() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { tab, setTabHome, setTabAgenda, openHistory, setTabPerfil, startVoice } = useApp();
 
   return (
     <View
       className="flex-row items-center justify-between px-5 pb-5 pt-2"
       style={{
-        backgroundColor: 'rgba(255,255,255,0.75)',
+        backgroundColor: isDark ? 'rgba(15,15,17,0.85)' : 'rgba(255,255,255,0.75)',
         borderTopWidth: 1,
-        borderTopColor: 'rgba(59,130,246,0.08)',
+        borderTopColor: isDark ? 'rgba(255,255,255,0.08)' : colors.hairline,
       }}
     >
       <TabButton label="Início" active={tab === 'home'} onPress={setTabHome} icon={(c) => <HomeIcon color={c} />} />
@@ -66,7 +66,7 @@ export function BottomNav() {
           height: 60,
           marginTop: -30,
           borderWidth: 5,
-          borderColor: '#F7FBFF',
+          borderColor: colors.bg,
           shadowColor: colors.accent,
           shadowOpacity: 0.4,
           shadowRadius: 24,

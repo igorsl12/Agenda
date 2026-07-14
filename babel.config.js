@@ -9,9 +9,9 @@ module.exports = function (api) {
       'nativewind/babel',
     ],
     plugins: [
-      // worklets deve vir ANTES do reanimated (dependência do reanimated 3.10+).
-      'react-native-worklets/plugin',
-      // Reanimated precisa vir por último para instrumentar corretamente o código.
+      // Reanimated (3.10+) já inclui o plugin de worklets internamente.
+      // Declarar 'react-native-worklets/plugin' separado causa "Duplicate plugin"
+      // porque ambos resolvem para o mesmo arquivo. Manter só o do reanimated.
       'react-native-reanimated/plugin',
     ],
   };

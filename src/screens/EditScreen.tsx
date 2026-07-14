@@ -8,7 +8,7 @@ import { BackIcon } from '../components/icons';
 import { CATEGORY_LIST, categoryStyle } from '../utils/appointmentUtils';
 
 export function EditScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { form, editMode, editScreenTitle, setField, setCategory, saveForm, backFromEdit } = useApp();
 
   return (
@@ -18,7 +18,7 @@ export function EditScreen() {
           <Pressable
             onPress={backFromEdit}
             className="items-center justify-center rounded-full bg-surface"
-            style={{ width: 36, height: 36, shadowColor: '#101B36', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}
+            style={{ width: 36, height: 36, shadowColor: colors.ink, shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
@@ -54,13 +54,13 @@ export function EditScreen() {
                     style={{
                       height: 34,
                       paddingHorizontal: 14,
-                      backgroundColor: active ? meta.bg : 'transparent',
-                      borderColor: active ? meta.color : 'rgba(16,27,54,0.12)',
+                      backgroundColor: active ? (isDark ? meta.color : meta.bg) : 'transparent',
+                      borderColor: active ? meta.color : colors.hairline,
                     }}
                     accessibilityRole="button"
                     accessibilityLabel={`Categoria ${meta.label}`}
                   >
-                    <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12.5, color: active ? meta.color : colors.muted }}>
+                    <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12.5, color: active ? (isDark ? '#0F0F11' : meta.color) : colors.muted }}>
                       {meta.label}
                     </Text>
                   </Pressable>

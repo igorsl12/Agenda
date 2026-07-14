@@ -5,7 +5,7 @@ import { useTheme } from '../theme/ThemeProvider';
 import type { Appointment } from '../types';
 import { Avatar } from './ui';
 import { ChevronRight } from './icons';
-import { statusStyle, categoryStyle, isoToFriendly } from '../utils/appointmentUtils';
+import { statusStyle, categoryStyle, isoToFriendly, mixWithBase } from '../utils/appointmentUtils';
 
 export function AppointmentCard({
   appt,
@@ -14,7 +14,7 @@ export function AppointmentCard({
   appt: Appointment;
   onPress: () => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { bg, color } = statusStyle(appt.status);
   const cat = categoryStyle(appt.category);
   return (
@@ -22,7 +22,7 @@ export function AppointmentCard({
       onPress={onPress}
       className="mb-3 flex-row items-center gap-3.5 rounded-[20px] border bg-surface p-4 active:opacity-90"
       style={{
-        borderColor: 'rgba(59,130,246,0.06)',
+        borderColor: colors.hairline,
         shadowColor: colors.accent,
         shadowOpacity: 0.08,
         shadowRadius: 24,
@@ -57,7 +57,7 @@ export function AppointmentCard({
           {appt.specialty} · {appt.date || isoToFriendly(appt.dateISO)}, {appt.time}
         </Text>
         <View className="flex-row" style={{ gap: 6, marginTop: 6 }}>
-          <View style={{ backgroundColor: cat.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
+          <View style={{ backgroundColor: isDark ? mixWithBase(cat.bg, colors.bg, 0.72) : cat.bg, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 }}>
             <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 10, color: cat.color }}>{cat.label}</Text>
           </View>
         </View>

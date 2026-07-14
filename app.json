@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "icon": "./assets/icon.png",
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#F5F5F7"
@@ -13,11 +13,13 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.example.agenda"
+      "bundleIdentifier": "com.iagoslima.agenda",
+      "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.example.agenda",
+      "package": "com.iagoslima.agenda",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#F5F5F7"
       }
     },

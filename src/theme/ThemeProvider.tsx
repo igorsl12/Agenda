@@ -54,15 +54,16 @@ const lightColors: ThemeColors = {
 };
 
 const darkColors: ThemeColors = {
-  bgGradientTop: '#0B1424',
-  bgGradientBottom: '#05080F',
-  bg: '#0A1020',
-  surface: '#141C2E',
-  ink: '#EAF2FF',
-  muted: '#8E9BB4',
-  accent: '#5B9CFF',
-  accentLight: '#7FB2FF',
-  hairline: 'rgba(91,156,255,0.22)',
+  // Tema escuro NEUTRO (preto/cinza limpo); o azul fica só no acento de marca.
+  bgGradientTop: '#141417',
+  bgGradientBottom: '#08080A',
+  bg: '#0F0F11',
+  surface: '#1A1A1D',
+  ink: '#F5F5F7',
+  muted: '#A1A1AA',
+  accent: '#3B8BFF',
+  accentLight: '#5B9CFF',
+  hairline: 'rgba(255,255,255,0.10)',
   onAccent: '#FFFFFF',
 };
 

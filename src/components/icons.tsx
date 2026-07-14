@@ -40,7 +40,9 @@ export function HistoryIcon({ size = 22, color = '#2E6BF0' }: { size?: number; c
   );
 }
 
-export function SearchOffIcon({ size = 28, color = '#9AA7BD' }: { size?: number; color?: string }) {
+export function SearchOffIcon({ size = 28, color }: { size?: number; color?: string }) {
+  const { colors } = useTheme();
+  const stroke = color ?? colors.muted;
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Circle cx={10.5} cy={10.5} r={6.5} stroke={color} strokeWidth={2} />
@@ -73,18 +75,22 @@ export function MicIcon({ size = 24, color = '#fff' }: { size?: number; color?: 
   );
 }
 
-export function CloseIcon({ color = '#101B36' }: { color?: string }) {
+export function CloseIcon({ color }: { color?: string }) {
+  const { colors } = useTheme();
+  const stroke = color ?? colors.ink;
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-      <Path d="M6 6l12 12M18 6L6 18" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+      <Path d="M6 6l12 12M18 6L6 18" stroke={stroke} strokeWidth={2.2} strokeLinecap="round" />
     </Svg>
   );
 }
 
-export function BackIcon({ color = '#101B36' }: { color?: string }) {
+export function BackIcon({ color }: { color?: string }) {
+  const { colors } = useTheme();
+  const stroke = color ?? colors.ink;
   return (
     <Svg width={9} height={15} viewBox="0 0 8 14" fill="none">
-      <Path d="M7 1L1 7l6 6" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+      <Path d="M7 1L1 7l6 6" stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }

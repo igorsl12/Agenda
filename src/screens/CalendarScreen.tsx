@@ -48,18 +48,18 @@ export function CalendarScreen() {
           <Pressable onPress={setTabHome} accessibilityRole="button" accessibilityLabel="Voltar">
             <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 15, color: colors.accent }}>Início</Text>
           </Pressable>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: '#101B36' }}>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: colors.ink }}>
             {MONTHS[m][0].toUpperCase() + MONTHS[m].slice(1)} {year}
           </Text>
           <View style={{ width: 40 }} />
         </View>
 
         <View className="px-6 pb-3">
-          <View className="flex-row items-center justify-between rounded-[18px] border bg-surface px-3 py-2.5" style={{ borderColor: 'rgba(59,130,246,0.08)' }}>
+          <View className="flex-row items-center justify-between rounded-[18px] border bg-surface px-3 py-2.5" style={{ borderColor: colors.hairline }}>
             <Pressable onPress={() => shift(-1)} className="items-center justify-center rounded-full" style={{ width: 34, height: 34 }} accessibilityLabel="Mês anterior">
               <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: colors.accent }}>‹</Text>
             </Pressable>
-            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: '#64748B' }}>{MONTHS[m]} de {year}</Text>
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: colors.muted }}>{MONTHS[m]} de {year}</Text>
             <Pressable onPress={() => shift(1)} className="items-center justify-center rounded-full" style={{ width: 34, height: 34 }} accessibilityLabel="Próximo mês">
               <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: colors.accent }}>›</Text>
             </Pressable>
@@ -67,10 +67,10 @@ export function CalendarScreen() {
         </View>
 
         {/* Grade do calendário */}
-        <View className="mx-6 rounded-[18px] border bg-surface px-2.5 py-3" style={{ borderColor: 'rgba(59,130,246,0.06)' }}>
+        <View className="mx-6 rounded-[18px] border bg-surface px-2.5 py-3" style={{ borderColor: colors.hairline }}>
           <View className="flex-row justify-between px-1 pb-1.5">
             {WEEK.map((w, i) => (
-              <Text key={i} style={{ flex: 1, textAlign: 'center', fontFamily: 'Manrope', fontWeight: '700', fontSize: 11, color: '#9AA7BD' }}>{w}</Text>
+              <Text key={i} style={{ flex: 1, textAlign: 'center', fontFamily: 'Manrope', fontWeight: '700', fontSize: 11, color: colors.muted }}>{w}</Text>
             ))}
           </View>
           {Array.from({ length: Math.ceil(cells.length / 7) }).map((_, r) => (
@@ -84,7 +84,7 @@ export function CalendarScreen() {
                 return (
                   <Pressable key={c} onPress={() => setSelectedISO(iso)} style={{ flex: 1, alignItems: 'center', paddingVertical: 4 }} accessibilityRole="button" accessibilityLabel={`Dia ${num}`}>
                     <View style={{ width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: isSelected ? colors.accent : 'transparent', borderWidth: isToday && !isSelected ? 1.5 : 0, borderColor: colors.accent }}>
-                      <Text style={{ fontFamily: 'Manrope', fontWeight: isSelected || isToday ? '800' : '600', fontSize: 13, color: isSelected ? '#fff' : isToday ? colors.accent : '#101B36' }}>{num}</Text>
+                      <Text style={{ fontFamily: 'Manrope', fontWeight: isSelected || isToday ? '800' : '600', fontSize: 13, color: isSelected ? '#fff' : isToday ? colors.accent : colors.ink }}>{num}</Text>
                     </View>
                     {has ? <View style={{ width: 5, height: 5, borderRadius: 2.5, backgroundColor: colors.accent, marginTop: 3 }} /> : null}
                   </Pressable>
@@ -96,16 +96,16 @@ export function CalendarScreen() {
 
         {/* Lista do dia selecionado */}
         <View className="px-6 pt-4 pb-1 flex-row items-center justify-between">
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 16, color: '#101B36' }}>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 16, color: colors.ink }}>
             {selectedISO === todayISO ? 'Hoje' : 'Dia selecionado'}
           </Text>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 12, color: '#64748B' }}>{isoToFriendly(selectedISO)}</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 12, color: colors.muted }}>{isoToFriendly(selectedISO)}</Text>
         </View>
 
         <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingTop: 6, paddingBottom: 140 }} showsVerticalScrollIndicator={false}>
           {dayAppts.length === 0 ? (
             <View className="mt-10 items-center px-8">
-              <Text style={{ fontFamily: 'Manrope', fontSize: 14, color: '#64748B', textAlign: 'center' }}>
+              <Text style={{ fontFamily: 'Manrope', fontSize: 14, color: colors.muted, textAlign: 'center' }}>
                 Nenhum compromisso neste dia. Use o microfone para agendar.
               </Text>
             </View>

@@ -40,12 +40,12 @@ export function ListeningScreen() {
         {/* Fechar */}
         <Pressable
           onPress={cancelVoice}
-          className="absolute left-6 top-16 z-10 items-center justify-center rounded-full bg-white"
-          style={{ width: 36, height: 36, shadowColor: '#101B36', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}
+          className="absolute left-6 top-16 z-10 items-center justify-center rounded-full bg-surface"
+          style={{ width: 36, height: 36, shadowColor: colors.ink, shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}
           accessibilityRole="button"
           accessibilityLabel="Cancelar"
         >
-          <CloseIcon color="#101B36" />
+          <CloseIcon color={colors.ink} />
         </Pressable>
 
         <View className="flex-1 items-center justify-center" style={{ gap: 30 }}>
@@ -58,7 +58,7 @@ export function ListeningScreen() {
               </>
             )}
             {!isPhaseListening && (
-              <View style={{ position: 'absolute', left: 6, right: 6, top: 6, bottom: 6, borderRadius: 84, borderWidth: 3, borderColor: 'rgba(46,107,240,0.18)', borderTopColor: colors.accent }} />
+              <View style={{ position: 'absolute', left: 6, right: 6, top: 6, bottom: 6, borderRadius: 84, borderWidth: 3, borderColor: 'rgba(59,139,255,0.18)', borderTopColor: colors.accent }} />
             )}
             <Animated.View
               style={[
@@ -77,18 +77,18 @@ export function ListeningScreen() {
             </Animated.View>
           </View>
 
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 18, color: '#101B36' }}>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 18, color: colors.ink }}>
             {voiceError ? 'Algo deu errado' : listenStatusLabel}
           </Text>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '500', fontSize: 15, lineHeight: 22, color: voiceError ? '#B4232A' : '#3B5B8C', maxWidth: 290, textAlign: 'center', minHeight: 60 }}>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '500', fontSize: 15, lineHeight: 22, color: voiceError ? '#B4232A' : colors.muted, maxWidth: 290, textAlign: 'center', minHeight: 60 }}>
             {voiceError ?? transcriptShown}
           </Text>
 
           {showManualAdvance && (
             <Pressable
               onPress={advanceNow}
-              className="items-center justify-center rounded-full bg-white"
-              style={{ paddingVertical: 12, paddingHorizontal: 24, shadowColor: '#101B36', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } }}
+              className="items-center justify-center rounded-full bg-surface"
+              style={{ paddingVertical: 12, paddingHorizontal: 24, shadowColor: colors.ink, shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } }}
               accessibilityRole="button"
               accessibilityLabel="Concluir"
             >
@@ -99,8 +99,8 @@ export function ListeningScreen() {
           {voiceError && (
             <Pressable
               onPress={startVoice}
-              className="items-center justify-center rounded-full bg-white"
-              style={{ paddingVertical: 12, paddingHorizontal: 24, shadowColor: '#101B36', shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } }}
+              className="items-center justify-center rounded-full bg-surface"
+              style={{ paddingVertical: 12, paddingHorizontal: 24, shadowColor: colors.ink, shadowOpacity: 0.08, shadowRadius: 18, shadowOffset: { width: 0, height: 8 } }}
               accessibilityRole="button"
               accessibilityLabel="Tentar novamente"
             >

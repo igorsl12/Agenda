@@ -27,7 +27,7 @@ export function OnboardingScreen() {
             height: 420,
             transform: [{ translateX: -210 }],
             borderRadius: 210,
-            backgroundColor: 'rgba(91,156,255,0.35)',
+            backgroundColor: 'rgba(59,139,255,0.18)',
             opacity: 0.6,
           }}
         />
@@ -52,10 +52,10 @@ export function OnboardingScreen() {
           </LinearGradient>
         </View>
         <View style={{ marginTop: 6, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 34, color: '#101B36', letterSpacing: -0.5 }}>Agenda</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 34, color: colors.ink, letterSpacing: -0.5 }}>Agenda</Text>
           <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 16, color: colors.accent, marginTop: 4 }}>Dinâmica Inteligente</Text>
         </View>
-        <Text style={{ fontFamily: 'Manrope', fontSize: 15, lineHeight: 24, color: '#64748B', maxWidth: 270, textAlign: 'center', marginTop: 2 }}>
+        <Text style={{ fontFamily: 'Manrope', fontSize: 15, lineHeight: 24, color: colors.muted, maxWidth: 270, textAlign: 'center', marginTop: 2 }}>
           Marque seus compromissos só com a sua voz. Fale naturalmente e a IA organiza tudo para você.
         </Text>
         <Pressable

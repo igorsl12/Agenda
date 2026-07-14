@@ -9,6 +9,8 @@
 // de dessincronização.
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import { SchedulableTriggerInputTypes } from 'expo-notifications';
 import type { Appointment } from '../types';
 import type { UserSettings } from '../storage/settingsStorage';
 import { fromISO } from '../utils/appointmentUtils';
@@ -18,6 +20,11 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 // Timers ativos no web (id → timeout).
 const webTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
+// No Expo Go (SDK 53+) o módulo de notificações remotas foi removido e o
+// agendamento nativo lança erro. Em development build ele funciona normalmente.
+// Guardamos para não quebrar o app ao apenas visualizar a interface no Go.
+const IS_EXPO_GO = Constants.executionEnvironment === 'storeClient';
+
 if (Platform.OS !== 'web') {
   // Exibe a notificação mesmo com o app em primeiro plano.
   Notifications.setNotificationHandler({
@@ -25,6 +32,8 @@ if (Platform.OS !== 'web') {
       shouldShowAlert: true,
       shouldPlaySound: true,
       shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
     }),
   });
 }
@@ -119,10 +128,10 @@ export async function syncAppointmentReminders(
       const body = reminderBody(appt);
       if (Platform.OS === 'web') {
         scheduleWeb(appt.id, title, body, fireAt);
-      } else {
+      } else if (!IS_EXPO_GO) {
         await Notifications.scheduleNotificationAsync({
           content: { title, body, sound: true },
-          trigger: fireAt,
+          trigger: { type: SchedulableTriggerInputTypes.DATE, date: fireAt },
         });
       }
     }

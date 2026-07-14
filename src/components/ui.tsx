@@ -4,11 +4,10 @@ import React from 'react';
 import { View, Text, Pressable, TextInput, type TextInputProps } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme/ThemeProvider';
-import { categoryStyle, statusStyle } from '../utils/appointmentUtils';
+import { categoryStyle, statusStyle, mixWithBase } from '../utils/appointmentUtils';
 import type { AppointmentCategory, AppointmentStatus } from '../types';
 import { cn } from '../utils/cn';
 
-/** Fundo em gradiente azulado (acento claro → branco/escuro). */
 export function GradientBackground({
   children,
   style,
@@ -36,7 +35,7 @@ export function GradientBackground({
   );
 }
 
-/** Avatar quadrado arredondado com iniciais. */
+/** Fundo em gradiente azulado (acento claro → branco/escuro). */
 export function Avatar({
   initials,
   color,
@@ -46,13 +45,17 @@ export function Avatar({
   color: string;
   size?: number;
 }) {
+  const { colors, isDark } = useTheme();
+  // No escuro, escurece o fundo (misturando com o fundo neutro) e mantém texto claro,
+  // evitando o "quadrado pastel claro" que destoava do tema neutro.
+  const backgroundColor = isDark ? mixWithBase(color, colors.bg, 0.78) : color;
   return (
     <View
       style={{
         width: size,
         height: size,
         borderRadius: size * 0.3,
-        backgroundColor: color,
+        backgroundColor,
         alignItems: 'center',
         justifyContent: 'center',
       }}
@@ -62,7 +65,7 @@ export function Avatar({
           fontFamily: 'Manrope',
           fontWeight: '800',
           fontSize: size * 0.32,
-          color: '#101B36',
+          color: colors.ink,
         }}
       >
         {initials}
@@ -73,11 +76,12 @@ export function Avatar({
 
 /** Etiqueta de status (Confirmado/Pendente) com cor de fundo. */
 export function StatusBadge({ status }: { status: AppointmentStatus }) {
+  const { colors, isDark } = useTheme();
   const { bg, color } = statusStyle(status);
   return (
     <View
       style={{
-        backgroundColor: bg,
+        backgroundColor: isDark ? mixWithBase(bg, colors.bg, 0.72) : bg,
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 999,
@@ -100,11 +104,12 @@ export function StatusBadge({ status }: { status: AppointmentStatus }) {
 
 /** Etiqueta de categoria (Saúde/Faculdade/...) com cor de fundo própria. */
 export function CategoryBadge({ category }: { category: AppointmentCategory }) {
+  const { colors, isDark } = useTheme();
   const { bg, color, label } = categoryStyle(category);
   return (
     <View
       style={{
-        backgroundColor: bg,
+        backgroundColor: isDark ? mixWithBase(bg, colors.bg, 0.72) : bg,
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 999,
@@ -185,7 +190,7 @@ export function OutlineButton({
   return (
     <Pressable
       onPress={onPress}
-      style={{ flex: flex ?? 1 }}
+      style={{ flex: flex ?? 1, borderColor: danger ? '#DC4C4C' : colors.hairline }}
       className="h-[52px] items-center justify-center rounded-[26px] border active:opacity-80"
       accessibilityRole="button"
     >
@@ -236,7 +241,7 @@ export function Field({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={isDark ? '#5A6781' : '#AAB4C4'}
+        placeholderTextColor={isDark ? '#7C7C82' : '#AAB4C4'}
         multiline={multiline}
         keyboardType={keyboardType}
         className={cn(
@@ -244,9 +249,7 @@ export function Field({
           multiline ? 'h-20 py-3' : 'h-12',
         )}
         style={{
-          borderColor: isDark
-            ? 'rgba(91,156,255,0.22)'
-            : 'rgba(59,130,246,0.18)',
+          borderColor: colors.hairline,
           color: colors.ink,
           fontFamily: 'Manrope',
           fontSize: 14,

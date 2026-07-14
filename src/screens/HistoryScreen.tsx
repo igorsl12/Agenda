@@ -31,20 +31,20 @@ function Chip({
   activeColor: string;
   onPress: () => void;
 }) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       className="items-center justify-center rounded-full border px-4"
       style={{
         height: 34,
-        backgroundColor: active ? activeBg : 'transparent',
-        borderColor: active ? activeColor : 'rgba(16,27,54,0.12)',
+        backgroundColor: active ? (isDark ? activeColor : activeBg) : 'transparent',
+        borderColor: active ? activeColor : colors.hairline,
       }}
       accessibilityRole="button"
       accessibilityLabel={label}
     >
-      <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12.5, color: active ? activeColor : colors.muted }}>
+      <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 12.5, color: active ? (isDark ? colors.bg : activeColor) : colors.muted }}>
         {label}
       </Text>
     </Pressable>
@@ -88,7 +88,7 @@ export function HistoryScreen() {
           <Pressable onPress={setTabHome} accessibilityRole="button" accessibilityLabel="Voltar">
             <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 15, color: colors.accent }}>Início</Text>
           </Pressable>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: '#101B36' }}>Histórico</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 18, color: colors.ink }}>Histórico</Text>
           <View style={{ width: 40 }} />
         </View>
 
@@ -97,16 +97,16 @@ export function HistoryScreen() {
             value={query}
             onChangeText={setQuery}
             placeholder="Buscar por título, especialidade ou local"
-            placeholderTextColor="#AAB4C4"
+            placeholderTextColor={colors.muted}
             className="h-12 rounded-[14px] border bg-surface px-3.5"
-            style={{ borderColor: 'rgba(59,130,246,0.18)', fontFamily: 'Manrope', fontSize: 14, color: colors.ink }}
+            style={{ borderColor: colors.hairline, fontFamily: 'Manrope', fontSize: 14, color: colors.ink }}
           />
         </View>
 
         {/* Painel de filtros: card único agrupando status + categoria. */}
         <View
           className="mx-6 mb-3 rounded-[18px] border bg-surface px-4 py-3.5"
-          style={{ borderColor: 'rgba(59,130,246,0.08)', gap: 10 }}
+          style={{ borderColor: colors.hairline, gap: 10 }}
         >
           <View className="flex-row gap-2">
             {FILTERS.map((f) => (
@@ -164,7 +164,7 @@ export function HistoryScreen() {
             <View className="flex-1 items-center justify-center px-8" style={{ gap: 14 }}>
               <View
                 className="items-center justify-center rounded-full"
-                style={{ width: 68, height: 68, backgroundColor: 'rgba(59,130,246,0.08)' }}
+                style={{ width: 68, height: 68, backgroundColor: colors.accent + '14' }}
               >
                 <SearchOffIcon size={30} color={colors.accent} />
               </View>

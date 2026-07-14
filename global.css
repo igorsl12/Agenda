@@ -15,12 +15,18 @@
   --color-surface: 255 255 255;  /* cartões claros */
 }
 .dark {
-  --color-canvas: 10 16 32;      /* #0A1020 fundo escuro */
-  --color-ink: 234 242 255;      /* #EAF2FF texto primário */
-  --color-accent: 91 156 255;    /* #5B9CFF azul claro do design */
-  --color-hairline: 38 48 70;    /* borda sutil escura */
-  --color-muted: 142 155 180;    /* texto secundário escuro */
-  --color-surface: 20 28 46;     /* #141C2E cartão escuro */
+  /* Tema escuro NEUTRO (preto/cinza limpo). O azul fica só no acento de marca. */
+  --color-canvas: 15 15 17;      /* #0F0F11 fundo quase preto neutro */
+  --color-ink: 245 245 247;      /* #F5F5F7 texto primário */
+  --color-accent: 59 139 255;    /* #3B8BFF azul de marca (mais vivo no escuro) */
+  --color-hairline: 38 38 42;    /* #26262A borda neutra sutil */
+  --color-muted: 161 161 170;    /* #A1A1AA texto secundário (contraste AA) */
+  --color-surface: 26 26 29;     /* #1A1A1D cartão escuro neutro */
+}
+
+/* No web, o fundo FORA do "device" (body) também vira neutro escuro. */
+.dark body {
+  background-color: #08080A;
 }
 
 /* Reset mínimo: remove margens e garante fonte base limpa. */

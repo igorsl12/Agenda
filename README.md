@@ -7,9 +7,22 @@ Fale naturalmente → o app grava o áudio do microfone → a IA transcreve, ext
 os dados do compromisso (título, detalhes, data, horário, local, categoria,
 notas) → mostra uma tela de confirmação → salva localmente.
 
-**Voz real**: preencha `EXPO_PUBLIC_GEMINI_API_KEY`, `EXPO_PUBLIC_GROQ_API_KEY`
-ou `EXPO_PUBLIC_OPENAI_API_KEY` no `.env` — o app auto-detecta o provedor. Sem
-chave, roda em **modo mock** (transcrição simulada, sem credenciais).
+**Voz real**: preencha `EXPO_PUBLIC_AI_PROXY_URL` (modo proxy, recomendado —
+ver `server/`) ou uma chave direta (`EXPO_PUBLIC_GEMINI_API_KEY`,
+`EXPO_PUBLIC_GROQ_API_KEY`, `EXPO_PUBLIC_OPENAI_API_KEY`) no `.env` — o app
+auto-detecta o provedor. Sem nada configurado, roda em **modo mock**
+(transcrição simulada, sem credenciais).
+
+> ⚠️ **Segurança**: variáveis `EXPO_PUBLIC_*` são embutidas no bundle do app —
+> qualquer pessoa com acesso ao APK ou à build web consegue extrair a chave.
+> Aceitável para protótipo/uso pessoal com chaves de cota limitada; para
+> **distribuição pública, use o modo proxy** (recomendado): rode o backend
+> mínimo em [`server/`](server/README.md), que guarda as chaves server-side
+> (`GEMINI_API_KEY` / `GROQ_API_KEY` / `OPENAI_API_KEY`, sem prefixo
+> `EXPO_PUBLIC`), e configure só `EXPO_PUBLIC_AI_PROXY_URL` no `.env` do app.
+> Com a URL do proxy definida, ela tem prioridade sobre as chaves diretas na
+> auto-detecção — nenhuma chave vai para o bundle. Nunca distribua uma build
+> contendo sua chave.
 
 > Status: funcional de ponta a ponta. Testes unitários da lógica pura (vitest); sem CI configurado.
 

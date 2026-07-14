@@ -105,7 +105,7 @@ export async function stopRecording(): Promise<RecordedAudio> {
     Platform.OS === 'web'
       ? await blobUriToBase64(uri)
       : await FileSystem.readAsStringAsync(uri, {
-          encoding: FileSystem.EncodingType.Base64,
+          encoding: 'base64',
         });
 
   if (!base64) {

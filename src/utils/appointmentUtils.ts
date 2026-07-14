@@ -1,7 +1,23 @@
 // appointmentUtils.ts — helpers de cores, iniciais, status, categoria e datas.
 import type { Appointment, AppointmentCategory, AppointmentStatus } from '../types';
 
-/** Cores de fundo de avatar por status (do protótipo de design). */
+/** Converte hex (#RGB ou #RRGGBB) em {r,g,b}. */
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const n = parseInt(h, 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
+/** Mistura a cor `hex` com uma base `base` na fração `t` (0 = cor pura, 1 = base). */
+export function mixWithBase(hex: string, base: string, t: number): string {
+  const a = hexToRgb(hex);
+  const b = hexToRgb(base);
+  const r = Math.round(a.r * (1 - t) + b.r * t);
+  const g = Math.round(a.g * (1 - t) + b.g * t);
+  const bl = Math.round(a.b * (1 - t) + b.b * t);
+  return `rgb(${r}, ${g}, ${bl})`;
+}
 export const STATUS_STYLE: Record<
   AppointmentStatus,
   { bg: string; color: string }

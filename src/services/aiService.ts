@@ -1,8 +1,10 @@
 // aiService.ts — transcrição + extração de compromisso a partir de áudio.
 //
-// Provedores: Gemini (uma chamada multimodal: áudio → JSON) ou OpenAI
-// (Whisper transcreve → chat extrai JSON). Sem chave configurada o app
-// permanece em modo mock (ver voiceService.ts).
+// Provedores: Gemini (uma chamada multimodal: áudio → JSON), OpenAI/Groq
+// (Whisper transcreve → chat extrai JSON) ou proxy (backend próprio em
+// server/ que guarda as chaves server-side — recomendado para distribuição,
+// pois variáveis EXPO_PUBLIC_* ficam expostas no bundle). Sem nada
+// configurado o app permanece em modo mock (ver voiceService.ts).
 //
 // As funções de parsing/normalização são puras e testadas em
 // src/services/__tests__/aiService.test.ts.
@@ -16,7 +18,7 @@ import {
 } from '../utils/appointmentUtils';
 import type { RecordedAudio } from './recorderService';
 
-export type AiProvider = 'mock' | 'gemini' | 'openai' | 'groq';
+export type AiProvider = 'mock' | 'gemini' | 'openai' | 'groq' | 'proxy';
 
 export interface VoiceExtraction {
   transcript: string;
@@ -31,17 +33,23 @@ const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 const env = (key: string): string =>
   (typeof process !== 'undefined' && process.env && process.env[key]) || '';
 
-/** Decide o provedor: explícito via env, senão auto-detecta pela chave. */
+/**
+ * Decide o provedor: explícito via env, senão auto-detecta.
+ * O proxy tem prioridade na auto-detecção: com EXPO_PUBLIC_AI_PROXY_URL
+ * definida, as chaves diretas (expostas no bundle) são ignoradas.
+ */
 export function getProvider(): AiProvider {
   const explicit = env('EXPO_PUBLIC_AI_PROVIDER').toLowerCase();
   if (
     explicit === 'gemini' ||
     explicit === 'openai' ||
     explicit === 'groq' ||
+    explicit === 'proxy' ||
     explicit === 'mock'
   ) {
     return explicit;
   }
+  if (env('EXPO_PUBLIC_AI_PROXY_URL')) return 'proxy';
   if (env('EXPO_PUBLIC_GEMINI_API_KEY')) return 'gemini';
   if (env('EXPO_PUBLIC_GROQ_API_KEY')) return 'groq';
   if (env('EXPO_PUBLIC_OPENAI_API_KEY')) return 'openai';
@@ -167,14 +175,81 @@ export function parseExtractionResponse(
 }
 
 // ---------------------------------------------------------------
+// Proxy (backend próprio — ver server/)
+// ---------------------------------------------------------------
+
+/** Normaliza a URL do proxy removendo barras finais; '' se não configurada. */
+export function normalizeProxyUrl(raw: string): string {
+  return String(raw ?? '')
+    .trim()
+    .replace(/\/+$/, '');
+}
+
+/**
+ * Valida o payload JSON devolvido pelo proxy e extrai o texto bruto do
+ * modelo (campo `raw`). A validação de conteúdo continua no cliente via
+ * parseExtractionResponse — nunca confiamos cegamente no proxy.
+ */
+export function parseProxyPayload(payload: unknown): string {
+  if (
+    payload !== null &&
+    typeof payload === 'object' &&
+    typeof (payload as { raw?: unknown }).raw === 'string' &&
+    (payload as { raw: string }).raw.trim() !== ''
+  ) {
+    return (payload as { raw: string }).raw;
+  }
+  throw new Error(
+    'O servidor proxy retornou uma resposta em formato inesperado. Verifique se o servidor (server/) está atualizado e no ar.',
+  );
+}
+
+async function extractWithProxy(audio: RecordedAudio): Promise<VoiceExtraction> {
+  const baseUrl = normalizeProxyUrl(env('EXPO_PUBLIC_AI_PROXY_URL'));
+  if (!baseUrl) {
+    throw new Error(
+      'Proxy de IA não configurado. Preencha EXPO_PUBLIC_AI_PROXY_URL no .env.',
+    );
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl}/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ base64: audio.base64, mimeType: audio.mimeType }),
+    });
+  } catch {
+    throw new Error(
+      'Não consegui conectar ao servidor proxy. Verifique EXPO_PUBLIC_AI_PROXY_URL e se o servidor está no ar.',
+    );
+  }
+
+  if (!response.ok) {
+    // O proxy devolve { error: "mensagem amigável" } quando algo falha.
+    const body = (await response.json().catch(() => null)) as {
+      error?: unknown;
+    } | null;
+    const serverMessage =
+      body && typeof body.error === 'string' ? body.error : '';
+    throw new Error(
+      serverMessage || `Falha na IA (proxy ${response.status}). Tente novamente.`,
+    );
+  }
+
+  const payload: unknown = await response.json().catch(() => null);
+  return parseExtractionResponse(parseProxyPayload(payload), new Date());
+}
+
+// ---------------------------------------------------------------
 // Provedores
 // ---------------------------------------------------------------
 
 async function extractWithGemini(audio: RecordedAudio): Promise<VoiceExtraction> {
   const key = env('EXPO_PUBLIC_GEMINI_API_KEY');
-  const response = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+  const response = await fetch(GEMINI_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
     body: JSON.stringify({
       contents: [
         {
@@ -310,6 +385,8 @@ export async function extractAppointmentFromAudio(
 ): Promise<VoiceExtraction> {
   const provider = getProvider();
   switch (provider) {
+    case 'proxy':
+      return extractWithProxy(audio);
     case 'gemini':
       return extractWithGemini(audio);
     case 'openai':
@@ -318,7 +395,7 @@ export async function extractAppointmentFromAudio(
       return extractWithOpenAICompatible(audio, groqConfig());
     default:
       throw new Error(
-        'Nenhum provedor de IA configurado. Preencha EXPO_PUBLIC_GEMINI_API_KEY, EXPO_PUBLIC_GROQ_API_KEY ou EXPO_PUBLIC_OPENAI_API_KEY no .env.',
+        'Nenhum provedor de IA configurado. Preencha EXPO_PUBLIC_AI_PROXY_URL (recomendado), EXPO_PUBLIC_GEMINI_API_KEY, EXPO_PUBLIC_GROQ_API_KEY ou EXPO_PUBLIC_OPENAI_API_KEY no .env.',
       );
   }
 }

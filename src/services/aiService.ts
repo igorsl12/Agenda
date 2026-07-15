@@ -212,11 +212,19 @@ async function extractWithProxy(audio: RecordedAudio): Promise<VoiceExtraction> 
     );
   }
 
+  // Segredo compartilhado opcional (deve espelhar PROXY_AUTH_TOKEN no servidor).
+  // Atenção: como toda env EXPO_PUBLIC_*, vai para o bundle — serve para
+  // barrar uso casual do endpoint, não substitui autenticação de usuário.
+  const proxyToken = env('EXPO_PUBLIC_AI_PROXY_TOKEN');
+
   let response: Response;
   try {
     response = await fetch(`${baseUrl}/extract`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(proxyToken ? { 'X-Proxy-Token': proxyToken } : {}),
+      },
       body: JSON.stringify({ base64: audio.base64, mimeType: audio.mimeType }),
     });
   } catch {

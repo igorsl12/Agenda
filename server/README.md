@@ -30,6 +30,13 @@ EXPO_PUBLIC_AI_PROXY_URL=http://SEU_HOST:8787
 | `OPENAI_MODEL` / `GROQ_MODEL` | Modelo de chat opcional (defaults: `gpt-4o-mini` / `openai/gpt-oss-20b`) |
 | `PORT` | Porta HTTP (default `8787`) |
 | `ALLOWED_ORIGIN` | Valor de `Access-Control-Allow-Origin` (default `*`; restrinja em produção) |
+| `PROXY_AUTH_TOKEN` | Segredo opcional: se definido, exige header `X-Proxy-Token` igual (configure `EXPO_PUBLIC_AI_PROXY_TOKEN` no app) |
+| `RATE_LIMIT_MAX` | Máximo de requisições por IP por minuto em `POST /extract` (default `10`) |
+
+> As mesmas variáveis valem para a function Vercel em `api/extract.js`
+> (configure em *Project Settings → Environment Variables*). Lá o rate limit
+> é por instância da function (melhor esforço); para proteção forte contra
+> abuso de quota, defina `PROXY_AUTH_TOKEN`.
 
 ## Endpoints
 

@@ -16,6 +16,26 @@ const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '*';
 /** Limite de payload (~15MB) — áudio base64 de gravações curtas cabe folgado. */
 const MAX_BODY_BYTES = 15 * 1024 * 1024;
 
+// Autenticação opcional por segredo compartilhado: se PROXY_AUTH_TOKEN
+// estiver definida, o app precisa enviar o header X-Proxy-Token igual.
+const PROXY_AUTH_TOKEN = process.env.PROXY_AUTH_TOKEN || '';
+
+// Rate limit simples por IP (em memória) — freia abuso de quota sem infra extra.
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 10);
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const rateBuckets = new Map();
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip);
+  if (!bucket || now - bucket.windowStart >= RATE_LIMIT_WINDOW_MS) {
+    rateBuckets.set(ip, { windowStart: now, count: 1 });
+    return false;
+  }
+  bucket.count += 1;
+  return bucket.count > RATE_LIMIT_MAX;
+}
+
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
@@ -257,12 +277,17 @@ function parseExtractRequest(rawBody) {
   return { base64, mimeType };
 }
 
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Proxy-Token',
+  Vary: 'Origin',
+};
+
 function sendJson(res, status, payload) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    ...CORS_HEADERS,
   });
   res.end(JSON.stringify(payload));
 }
@@ -294,7 +319,9 @@ async function handleExtract(req, res) {
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'OPTIONS') {
-      sendJson(res, 204, {});
+      // 204 não pode ter corpo.
+      res.writeHead(204, CORS_HEADERS);
+      res.end();
       return;
     }
     if (req.method === 'GET' && req.url === '/health') {
@@ -302,6 +329,17 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === 'POST' && req.url === '/extract') {
+      if (PROXY_AUTH_TOKEN && req.headers['x-proxy-token'] !== PROXY_AUTH_TOKEN) {
+        sendJson(res, 401, { error: 'Não autorizado.' });
+        return;
+      }
+      const ip = req.socket?.remoteAddress || 'desconhecido';
+      if (isRateLimited(ip)) {
+        sendJson(res, 429, {
+          error: 'Muitas requisições. Aguarde um minuto e tente novamente.',
+        });
+        return;
+      }
       await handleExtract(req, res);
       return;
     }

@@ -30,8 +30,35 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GE
 const OPENAI_BASE_URL = 'https://api.openai.com/v1';
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 
-const env = (key: string): string =>
-  (typeof process !== 'undefined' && process.env && process.env[key]) || '';
+// O Expo/Metro só injeta variáveis EXPO_PUBLIC_* no bundle quando elas são
+// referenciadas de forma ESTÁTICA e literal (process.env.EXPO_PUBLIC_XXX).
+// Acesso dinâmico — process.env[key] — NÃO é substituído no build (web
+// inclusive): o valor some do bundle e o app cai sempre em modo mock.
+// Por isso cada variável aparece com o caminho completo, e a leitura é feita
+// no momento da chamada (o switch mantém as referências estáticas para o
+// Metro e ainda deixa os testes trocarem o ambiente via vi.stubEnv).
+const env = (key: string): string => {
+  switch (key) {
+    case 'EXPO_PUBLIC_AI_PROVIDER':
+      return process.env.EXPO_PUBLIC_AI_PROVIDER || '';
+    case 'EXPO_PUBLIC_AI_PROXY_URL':
+      return process.env.EXPO_PUBLIC_AI_PROXY_URL || '';
+    case 'EXPO_PUBLIC_AI_PROXY_TOKEN':
+      return process.env.EXPO_PUBLIC_AI_PROXY_TOKEN || '';
+    case 'EXPO_PUBLIC_GEMINI_API_KEY':
+      return process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
+    case 'EXPO_PUBLIC_GROQ_API_KEY':
+      return process.env.EXPO_PUBLIC_GROQ_API_KEY || '';
+    case 'EXPO_PUBLIC_GROQ_MODEL':
+      return process.env.EXPO_PUBLIC_GROQ_MODEL || '';
+    case 'EXPO_PUBLIC_OPENAI_API_KEY':
+      return process.env.EXPO_PUBLIC_OPENAI_API_KEY || '';
+    case 'EXPO_PUBLIC_OPENAI_MODEL':
+      return process.env.EXPO_PUBLIC_OPENAI_MODEL || '';
+    default:
+      return '';
+  }
+};
 
 /**
  * Decide o provedor: explícito via env, senão auto-detecta.

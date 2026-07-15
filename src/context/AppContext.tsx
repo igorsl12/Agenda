@@ -50,6 +50,14 @@ import {
   ensureNotificationPermission,
   syncAppointmentReminders,
 } from '../services/notificationService';
+import { useAuth } from './AuthContext';
+import {
+  fetchAppointments,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+} from '../storage/appointmentApi';
+import { clearAppointments } from '../storage/appointmentStorage';
 import type { ParsedAppointment } from '../types';
 
 interface AppState {
@@ -165,15 +173,65 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
+  // Auth: quando logado, compromissos vivem no banco; quando não, no AsyncStorage.
+  const { isAuthed } = useAuth();
+  const isAuthedRef = useRef(isAuthed);
+  isAuthedRef.current = isAuthed;
+  // Garante que a migração local→nuvem rode uma única vez por sessão de app.
+  const migratedRef = useRef(false);
+
   useEffect(() => {
-    Promise.all([loadAppointments(), loadSettings()]).then(
-      ([list, loadedSettings]) => {
+    let cancelled = false;
+    (async () => {
+      if (isAuthed) {
+        try {
+          const remote = await fetchAppointments();
+          // Primeiro login com banco vazio: migra os compromissos locais.
+          if (remote.length === 0 && !migratedRef.current) {
+            const local = await loadAppointments();
+            if (local.length > 0) {
+              for (const a of local) {
+                await createAppointment({
+                  title: a.title,
+                  specialty: a.specialty,
+                  dateISO: a.dateISO,
+                  time: a.time,
+                  location: a.location,
+                  notes: a.notes || '',
+                  status: a.status,
+                  category: a.category,
+                  color: a.color,
+                  initials: a.initials,
+                });
+              }
+              await clearAppointments();
+              const after = await fetchAppointments();
+              if (!cancelled) setAppointments(after);
+            }
+            migratedRef.current = true;
+          } else if (!cancelled) {
+            setAppointments(remote);
+          }
+          if (!cancelled) setLoading(false);
+          return;
+        } catch {
+          // Falha de rede: cai no cache local como fallback (modo offline).
+        }
+      }
+      const [list, loadedSettings] = await Promise.all([
+        loadAppointments(),
+        loadSettings(),
+      ]);
+      if (!cancelled) {
         setAppointments(list);
         setSettings(loadedSettings);
         setLoading(false);
-      },
-    );
-  }, []);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthed]);
 
   // Reagenda lembretes quando compromissos ou preferências mudam.
   useEffect(() => {
@@ -227,6 +285,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setScreen('historico');
   };
 
+  // ---- persistência híbrida (banco quando logado, AsyncStorage offline) ----
+  /** Cria no banco se logado; senão retorna o próprio (fica local). */
+  const persistCreate = async (appt: Appointment): Promise<Appointment> => {
+    if (!isAuthedRef.current) return appt;
+    try {
+      return await createAppointment({
+        title: appt.title,
+        specialty: appt.specialty,
+        dateISO: appt.dateISO,
+        time: appt.time,
+        location: appt.location,
+        notes: appt.notes || '',
+        status: appt.status,
+        category: appt.category,
+        color: appt.color,
+        initials: appt.initials,
+      });
+    } catch {
+      return appt; // offline: mantém local
+    }
+  };
+  /** Atualiza no banco se logado; senão retorna o próprio. */
+  const persistUpdate = async (
+    id: string,
+    appt: Appointment,
+  ): Promise<Appointment> => {
+    if (!isAuthedRef.current) return appt;
+    try {
+      return await updateAppointment(id, {
+        title: appt.title,
+        specialty: appt.specialty,
+        dateISO: appt.dateISO,
+        time: appt.time,
+        location: appt.location,
+        notes: appt.notes || '',
+        status: appt.status,
+        category: appt.category,
+        color: appt.color,
+        initials: appt.initials,
+      });
+    } catch {
+      return appt;
+    }
+  };
+  /** Remove no banco se logado (silencioso se offline). */
+  const persistDelete = async (id: string): Promise<void> => {
+    if (!isAuthedRef.current) return;
+    try {
+      await deleteAppointment(id);
+    } catch {
+      /* mantém local */
+    }
+  };
+
   // ---- compromissos ----
   const selectAppointment = (id: string) => {
     setSelectedId(id);
@@ -258,28 +370,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
     setScreen('edit');
   };
-  const deleteSelected = (id?: string) => {
+  const deleteSelected = async (id?: string) => {
     const appt =
       appointments.find((a) => a.id === (id ?? selectedId)) ||
       current;
     if (!appt) return;
     const next = appointments.filter((a) => a.id !== appt.id);
     setAppointments(next);
-    saveAppointments(next);
+    if (!isAuthedRef.current) saveAppointments(next);
+    await persistDelete(appt.id);
     setSelectedId(null);
     setScreen('home');
   };
-  const saveForm = () => {
+  const saveForm = async () => {
     const dateISO = form.dateISO || isoInDays(0);
     const dateFriendly = form.date || isoToFriendly(dateISO);
     if (editMode === 'edit-existing' && selectedId) {
+      const base =
+        appointments.find((a) => a.id === selectedId) || current;
+      const updated: Appointment = {
+        ...(base as Appointment),
+        ...form,
+        dateISO,
+        date: dateFriendly,
+      };
+      const saved = await persistUpdate(selectedId, updated);
       const next = appointments.map((a) =>
-        a.id === selectedId
-          ? { ...a, ...form, dateISO, date: dateFriendly }
-          : a,
+        a.id === selectedId ? saved : a,
       );
       setAppointments(next);
-      saveAppointments(next);
+      if (!isAuthedRef.current) saveAppointments(next);
       setScreen('details');
     } else {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -294,9 +414,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         color: colorForId(id),
         initials: initialsFromTitle(title),
       };
-      const next = [created, ...appointments];
+      const saved = await persistCreate(created);
+      const next = [saved, ...appointments];
       setAppointments(next);
-      saveAppointments(next);
+      if (!isAuthedRef.current) saveAppointments(next);
       setScreen('home');
     }
   };
@@ -393,7 +514,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })();
   };
 
-  const confirmVoiceEvent = () => {
+  const confirmVoiceEvent = async () => {
     const parsed = parsedEvent ?? voiceService.extractEvent();
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     const created: Appointment = {
@@ -405,9 +526,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       color: colorForId(id),
       initials: initialsFromTitle(parsed.title),
     };
-    const next = [created, ...appointments];
+    const saved = await persistCreate(created);
+    const next = [saved, ...appointments];
     setAppointments(next);
-    saveAppointments(next);
+    if (!isAuthedRef.current) saveAppointments(next);
     setParsedEvent(null);
     setScreen('home');
   };

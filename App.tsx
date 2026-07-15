@@ -1,13 +1,16 @@
 // App.tsx — shell do app: providers + roteador por tela (sem navegação externa).
 import './global.css';
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 import { AppProvider, useApp } from './src/context/AppContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
+import { SignupScreen } from './src/screens/SignupScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ListeningScreen } from './src/screens/ListeningScreen';
 import { ConfirmScreen } from './src/screens/ConfirmScreen';
@@ -58,13 +61,32 @@ function DeviceFrame({ children }: { children: React.ReactNode }) {
 
 function Router() {
   const { screen, loading } = useApp();
+  const { isAuthed, loading: authLoading } = useAuth();
+  // Modo das telas de auth (login/signup) quando não logado.
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
 
-  if (loading) {
+  // Erro vindo do retorno do OAuth Google (/?auth_error=...).
+  const authError =
+    (typeof window !== 'undefined' && window.location?.search)
+      ? new URLSearchParams(window.location.search).get('auth_error') ?? undefined
+      : undefined;
+
+  // Carregando (app ou auth).
+  if (loading || authLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-canvas">
         <Text style={{ fontFamily: 'Manrope', color: '#64748B' }}>Carregando…</Text>
         <StatusBar style="dark" />
       </View>
+    );
+  }
+
+  // Não autenticado -> telas de login/signup.
+  if (!isAuthed) {
+    return authMode === 'login' ? (
+      <LoginScreen onGoSignup={() => setAuthMode('signup')} authError={authError} />
+    ) : (
+      <SignupScreen onGoLogin={() => setAuthMode('login')} />
     );
   }
 
@@ -110,11 +132,13 @@ export default function App() {
 
   return (
     <ThemeProvider>
-      <AppProvider>
-        <DeviceFrame>
-          <Router />
-        </DeviceFrame>
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <DeviceFrame>
+            <Router />
+          </DeviceFrame>
+        </AppProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

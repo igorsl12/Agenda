@@ -106,3 +106,12 @@ export async function saveAppointments(list: Appointment[]): Promise<void> {
     console.warn('[storage] falha ao salvar:', err);
   }
 }
+
+/** Remove todos os compromissos locais (usado após migração para a nuvem). */
+export async function clearAppointments(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(KEY);
+  } catch (err) {
+    console.warn('[storage] falha ao limpar:', err);
+  }
+}

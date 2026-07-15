@@ -410,7 +410,8 @@ function groqConfig(): OpenAICompatibleConfig {
     keyEnvName: 'EXPO_PUBLIC_GROQ_API_KEY',
     // gpt-oss: modelos abertos da OpenAI hospedados na Groq.
     chatModel: env('EXPO_PUBLIC_GROQ_MODEL') || 'openai/gpt-oss-20b',
-    transcribeModel: 'whisper-large-v3',
+    // Turbo: ~4x mais rápido, precisão equivalente para pt-BR curto.
+    transcribeModel: 'whisper-large-v3-turbo',
   };
 }
 

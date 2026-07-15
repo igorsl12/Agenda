@@ -28,6 +28,7 @@ EXPO_PUBLIC_AI_PROXY_URL=http://SEU_HOST:8787
 | `GROQ_API_KEY` | Chave da Groq (prioridade 2) |
 | `OPENAI_API_KEY` | Chave da OpenAI (prioridade 3) |
 | `OPENAI_MODEL` / `GROQ_MODEL` | Modelo de chat opcional (defaults: `gpt-4o-mini` / `openai/gpt-oss-20b`) |
+| `GROQ_TRANSCRIBE_MODEL` | Modelo de transcrição da Groq (default: `whisper-large-v3-turbo` — rápido; use `whisper-large-v3` se quiser máxima precisão) |
 | `PORT` | Porta HTTP (default `8787`) |
 | `ALLOWED_ORIGIN` | Valor de `Access-Control-Allow-Origin` (default `*`; restrinja em produção) |
 | `PROXY_AUTH_TOKEN` | Segredo opcional: se definido, exige header `X-Proxy-Token` igual (configure `EXPO_PUBLIC_AI_PROXY_TOKEN` no app) |

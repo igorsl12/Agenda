@@ -18,7 +18,9 @@
 
 const GROQ_BASE_URL = 'https://api.groq.com/openai/v1';
 const CHAT_MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-20b';
-const TRANSCRIBE_MODEL = 'whisper-large-v3';
+// Turbo é ~4x mais rápido que whisper-large-v3, com precisão equivalente para
+// frases curtas em pt-BR. Configurável via GROQ_TRANSCRIBE_MODEL.
+const TRANSCRIBE_MODEL = process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo';
 
 /** Limite de payload (~15MB) — áudio base64 de gravações curtas cabe folgado. */
 const MAX_BODY_BYTES = 15 * 1024 * 1024;

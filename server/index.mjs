@@ -231,7 +231,8 @@ function groqConfig() {
     baseUrl: GROQ_BASE_URL,
     apiKey: process.env.GROQ_API_KEY,
     chatModel: process.env.GROQ_MODEL || 'openai/gpt-oss-20b',
-    transcribeModel: 'whisper-large-v3',
+    // Turbo: ~4x mais rápido, precisão equivalente para pt-BR curto.
+    transcribeModel: process.env.GROQ_TRANSCRIBE_MODEL || 'whisper-large-v3-turbo',
   };
 }
 

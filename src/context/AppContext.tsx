@@ -67,6 +67,17 @@ interface AppState {
 const AI_PROVIDER = getProvider();
 const IS_MOCK = AI_PROVIDER === 'mock';
 
+// Mensagens rotativas na fase de processamento (fluxo real): a espera pesa
+// menos quando o usuário vê que algo está acontecendo. As duas primeiras
+// espelham o que o servidor faz em sequência (transcreve → interpreta).
+const PROCESSING_STEPS = [
+  'Transcrevendo o áudio...',
+  'Interpretando o compromisso...',
+  'Organizando os detalhes...',
+  'Quase lá...',
+];
+const PROCESSING_STEP_MS = 2600;
+
 interface AppContextValue extends AppState {
   // navegação
   goOnboardNext: () => void;
@@ -148,6 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     null,
   );
   const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [processingLabel, setProcessingLabel] = useState('Processando...');
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -352,14 +364,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
     void (async () => {
       setListenPhase('processing');
+      // Agenda a troca das mensagens enquanto a chamada única ao proxy corre.
+      setProcessingLabel(PROCESSING_STEPS[0]);
+      PROCESSING_STEPS.slice(1).forEach((label, i) => {
+        const t = setTimeout(
+          () => setProcessingLabel(label),
+          (i + 1) * PROCESSING_STEP_MS,
+        );
+        timers.current.push(t);
+      });
       try {
         const audio = await stopRecording();
         const result = await extractAppointmentFromAudio(audio);
+        clearTimers();
         setParsedEvent(result.event);
         setVoiceTranscript(result.transcript);
         setTranscriptShown(result.transcript);
         setScreen('confirm');
       } catch (err: unknown) {
+        clearTimers();
         setVoiceError(
           err instanceof Error
             ? err.message
@@ -464,7 +487,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ? IS_MOCK
             ? 'Ouvindo...'
             : 'Gravando... fale o compromisso'
-          : 'Processando...',
+          : IS_MOCK
+            ? 'Processando...'
+            : processingLabel,
       showManualAdvance: !IS_MOCK && listenPhase === 'listening' && !voiceError,
       isPhaseListening: listenPhase === 'listening',
       isPhaseProcessing: listenPhase === 'processing',
@@ -492,6 +517,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       voiceError,
       parsedEvent,
       voiceTranscript,
+      processingLabel,
       settings,
     ],
   );

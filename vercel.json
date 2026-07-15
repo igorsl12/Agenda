@@ -5,7 +5,6 @@
   "framework": null,
   "functions": {
     "api/extract.js": {
-      "runtime": "nodejs22.x",
       "memory": 1024,
       "maxDuration": 60
     }

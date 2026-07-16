@@ -1,6 +1,7 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "target": "es2018",
     "strict": true,
     "jsx": "react-jsx",
     "types": ["node"],

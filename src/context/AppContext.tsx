@@ -57,7 +57,6 @@ import {
   updateAppointment,
   deleteAppointment,
 } from '../storage/appointmentApi';
-import { clearAppointments } from '../storage/appointmentStorage';
 import type { ParsedAppointment } from '../types';
 
 interface AppState {
@@ -173,58 +172,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
-  // Auth: quando logado, compromissos vivem no banco; quando não, no AsyncStorage.
-  const { isAuthed } = useAuth();
+  // Auth: quando logado, compromissos vivem no banco (escopados por usuário);
+  // sem login, no AsyncStorage do dispositivo.
+  const { isAuthed, user } = useAuth();
   const isAuthedRef = useRef(isAuthed);
   isAuthedRef.current = isAuthed;
-  // Garante que a migração local→nuvem rode uma única vez por sessão de app.
-  const migratedRef = useRef(false);
+  // Última conta cujo nome já foi aplicado ao perfil (evita reaplicar a cada render).
+  const namedUserRef = useRef<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      // Preferências (nome, notificações) seguem locais ao dispositivo por ora.
+      const loadedSettings = await loadSettings();
+      if (!cancelled) setSettings(loadedSettings);
+
       if (isAuthed) {
         try {
+          // Cada conta vê apenas os seus compromissos — nada de seeds de
+          // demonstração nem de dados de outra conta no mesmo navegador.
           const remote = await fetchAppointments();
-          // Primeiro login com banco vazio: migra os compromissos locais.
-          if (remote.length === 0 && !migratedRef.current) {
-            const local = await loadAppointments();
-            if (local.length > 0) {
-              for (const a of local) {
-                await createAppointment({
-                  title: a.title,
-                  specialty: a.specialty,
-                  dateISO: a.dateISO,
-                  time: a.time,
-                  location: a.location,
-                  notes: a.notes || '',
-                  status: a.status,
-                  category: a.category,
-                  color: a.color,
-                  initials: a.initials,
-                });
-              }
-              await clearAppointments();
-              const after = await fetchAppointments();
-              if (!cancelled) setAppointments(after);
-            }
-            migratedRef.current = true;
-          } else if (!cancelled) {
+          if (!cancelled) {
             setAppointments(remote);
+            setLoading(false);
           }
-          if (!cancelled) setLoading(false);
-          return;
         } catch {
-          // Falha de rede: cai no cache local como fallback (modo offline).
+          // Falha de rede: conta logada não usa cache local — mostra vazio.
+          if (!cancelled) {
+            setAppointments([]);
+            setLoading(false);
+          }
         }
+        return;
       }
-      const [list, loadedSettings] = await Promise.all([
-        loadAppointments(),
-        loadSettings(),
-      ]);
+
+      // Modo local (sem login): usa apenas o cache do dispositivo.
+      const list = await loadAppointments();
       if (!cancelled) {
         setAppointments(list);
-        setSettings(loadedSettings);
         setLoading(false);
       }
     })();
@@ -232,6 +217,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [isAuthed]);
+
+  // A saudação e o perfil refletem a conta logada — não um nome de demo nem o
+  // de um usuário anterior no mesmo navegador. Aplica uma vez por conta.
+  useEffect(() => {
+    if (!isAuthed || !user) {
+      namedUserRef.current = null;
+      return;
+    }
+    if (namedUserRef.current === user.id) return;
+    namedUserRef.current = user.id;
+    const accountName = (user.name || '').trim();
+    if (!accountName) return;
+    setSettings((prev) => {
+      if (prev.userName === accountName) return prev;
+      const next = { ...prev, userName: accountName };
+      void saveSettings(next);
+      return next;
+    });
+  }, [isAuthed, user]);
 
   // Reagenda lembretes quando compromissos ou preferências mudam.
   useEffect(() => {

@@ -80,6 +80,17 @@ export function getProvider(): AiProvider {
   if (env('EXPO_PUBLIC_GEMINI_API_KEY')) return 'gemini';
   if (env('EXPO_PUBLIC_GROQ_API_KEY')) return 'groq';
   if (env('EXPO_PUBLIC_OPENAI_API_KEY')) return 'openai';
+  // Build web de produção (Vercel): usa o proxy same-origin (/api/extract),
+  // onde a GROQ_API_KEY vive server-side. Assim o app publicado funciona só
+  // com as variáveis do servidor — nenhuma EXPO_PUBLIC_* no bundle. Em dev
+  // (expo start) e em nativo cai no mock, salvo se uma env acima estiver setada.
+  if (
+    process.env.NODE_ENV === 'production' &&
+    typeof window !== 'undefined' &&
+    window.location?.origin
+  ) {
+    return 'proxy';
+  }
   return 'mock';
 }
 
@@ -232,7 +243,13 @@ export function parseProxyPayload(payload: unknown): string {
 }
 
 async function extractWithProxy(audio: RecordedAudio): Promise<VoiceExtraction> {
-  const baseUrl = normalizeProxyUrl(env('EXPO_PUBLIC_AI_PROXY_URL'));
+  // Prioriza a URL explícita; no web servido pela Vercel, usa o same-origin
+  // (/api/extract) para não exigir nenhuma variável EXPO_PUBLIC_* no bundle.
+  const baseUrl =
+    normalizeProxyUrl(env('EXPO_PUBLIC_AI_PROXY_URL')) ||
+    (typeof window !== 'undefined' && window.location?.origin
+      ? `${window.location.origin}/api`
+      : '');
   if (!baseUrl) {
     throw new Error(
       'Proxy de IA não configurado. Preencha EXPO_PUBLIC_AI_PROXY_URL no .env.',

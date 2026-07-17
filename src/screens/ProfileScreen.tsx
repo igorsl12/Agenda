@@ -3,7 +3,8 @@ import React from 'react';
 import { View, Text, Pressable, Switch, TextInput, ScrollView } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
-import { GradientBackground, Avatar } from '../components/ui';
+import { useAuth } from '../context/AuthContext';
+import { GradientBackground, Avatar, ConfirmDialog } from '../components/ui';
 import { BottomNav } from '../components/BottomNav';
 import { ChevronRight } from '../components/icons';
 
@@ -39,9 +40,11 @@ export function ProfileScreen() {
     toggleNotifications,
     toggleRemindOneHour,
   } = useApp();
+  const { logout } = useAuth();
 
   const [isEditingName, setIsEditingName] = React.useState(false);
   const [nameDraft, setNameDraft] = React.useState(userName);
+  const [confirmingLogout, setConfirmingLogout] = React.useState(false);
 
   const startEditName = () => {
     setNameDraft(userName);
@@ -132,10 +135,39 @@ export function ProfileScreen() {
           <Row label="Idioma" value="Português" />
           <Row label="Sobre" value="v0.1.0" />
         </View>
+
+        <View className="mt-6 mx-6">
+          <Pressable
+            onPress={() => setConfirmingLogout(true)}
+            style={{ width: '100%', height: 52, borderColor: '#DC4C4C' }}
+            className="items-center justify-center rounded-[26px] border active:opacity-80"
+            accessibilityRole="button"
+            accessibilityLabel="Sair da conta"
+          >
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 15, color: '#DC4C4C' }}>
+              Sair da conta
+            </Text>
+          </Pressable>
+        </View>
         </ScrollView>
 
         <BottomNav />
       </View>
+
+      <ConfirmDialog
+        visible={confirmingLogout}
+        title="Sair da conta"
+        message="Tem certeza que deseja sair? Você precisará entrar de novo para acessar sua agenda."
+        confirmLabel="Sair"
+        cancelLabel="Cancelar"
+        danger
+        onCancel={() => setConfirmingLogout(false)}
+        onConfirm={() => {
+          setConfirmingLogout(false);
+          setTabHome();
+          void logout();
+        }}
+      />
     </GradientBackground>
   );
 }

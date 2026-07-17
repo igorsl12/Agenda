@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Agenda Inteligente">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5B9CFF"/>
+      <stop offset="1" stop-color="#2E6BF0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- argolas do caderno -->
+  <rect x="206" y="112" width="20" height="46" rx="10" fill="#EAF2FF"/>
+  <rect x="286" y="112" width="20" height="46" rx="10" fill="#EAF2FF"/>
+
+  <!-- corpo do calendário -->
+  <rect x="118" y="138" width="276" height="250" rx="32" fill="#FFFFFF"/>
+  <!-- faixa superior (cabeçalho) com cantos de cima arredondados -->
+  <path d="M118 196 L118 170 Q118 138 150 138 L362 138 Q394 138 394 170 L394 196 Z" fill="#2E6BF0"/>
+
+  <!-- grade de dias -->
+  <g fill="#CBDDFB">
+    <rect x="158" y="228" width="28" height="28" rx="8"/>
+    <rect x="326" y="228" width="28" height="28" rx="8"/>
+    <rect x="158" y="284" width="28" height="28" rx="8"/>
+    <rect x="326" y="284" width="28" height="28" rx="8"/>
+    <rect x="242" y="340" width="28" height="28" rx="8"/>
+    <rect x="326" y="340" width="28" height="28" rx="8"/>
+  </g>
+  <!-- dia selecionado -->
+  <rect x="242" y="284" width="28" height="28" rx="8" fill="#2E6BF0"/>
+  <rect x="158" y="340" width="28" height="28" rx="8" fill="#9EC2FB"/>
+
+  <!-- badge de relógio -->
+  <circle cx="392" cy="392" r="56" fill="#FFFFFF"/>
+  <circle cx="392" cy="392" r="46" fill="#2E6BF0"/>
+  <g stroke="#FFFFFF" stroke-width="9" stroke-linecap="round">
+    <line x1="392" y1="392" x2="392" y2="368"/>
+    <line x1="392" y1="392" x2="416" y2="392"/>
+  </g>
+  <circle cx="392" cy="392" r="6" fill="#FFFFFF"/>
+</svg>

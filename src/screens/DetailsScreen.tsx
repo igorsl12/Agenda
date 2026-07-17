@@ -1,11 +1,28 @@
-// DetailsScreen.tsx — detalhes de um compromisso + ações editar/cancelar.
+// DetailsScreen.tsx — detalhes de um compromisso + ações editar/excluir.
 import React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Platform } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import { useApp } from '../context/AppContext';
 import { GradientBackground, OutlineButton, Avatar } from '../components/ui';
 import { BackIcon, ClockIcon, LocationIcon, CalendarIcon } from '../components/icons';
 import { statusStyle, categoryStyle, isoToFriendly, mixWithBase } from '../utils/appointmentUtils';
+
+/**
+ * Pede confirmação antes de excluir. Exclusão é irreversível, então nunca
+ * dispara direto do toque. Usa window.confirm no web (o Alert do RN-web não
+ * suporta botões) e Alert.alert com botão destrutivo no nativo.
+ */
+function confirmDelete(title: string, onConfirm: () => void): void {
+  const message = `Excluir "${title}"? Essa ação não pode ser desfeita.`;
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined' && window.confirm(message)) onConfirm();
+    return;
+  }
+  Alert.alert('Excluir compromisso', message, [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Excluir', style: 'destructive', onPress: onConfirm },
+  ]);
+}
 
 export function DetailsScreen() {
   const { colors, isDark } = useTheme();
@@ -83,8 +100,8 @@ export function DetailsScreen() {
         {/* Ações fixas (sempre visíveis, fora do scroll) */}
         <View className="px-6 pb-6 pt-3 flex-col" style={{ gap: 10, borderTopWidth: 1, borderTopColor: colors.hairline }}>
           <OutlineButton label="Editar compromisso" onPress={() => openEditExisting(current?.id)} />
-          <Pressable onPress={() => deleteSelected(current?.id)} className="items-center justify-center" style={{ height: 44 }} accessibilityRole="button" accessibilityLabel="Cancelar compromisso">
-            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: '#DC4C4C' }}>Cancelar compromisso</Text>
+          <Pressable onPress={() => confirmDelete(current.title, () => deleteSelected(current.id))} className="items-center justify-center" style={{ height: 44 }} accessibilityRole="button" accessibilityLabel="Excluir compromisso">
+            <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 14, color: '#DC4C4C' }}>Excluir compromisso</Text>
           </Pressable>
         </View>
       </View>

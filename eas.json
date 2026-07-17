@@ -11,11 +11,19 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE": "https://agendia-two.vercel.app",
+        "EXPO_PUBLIC_AI_PROXY_URL": "https://agendia-two.vercel.app/api"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE": "https://agendia-two.vercel.app",
+        "EXPO_PUBLIC_AI_PROXY_URL": "https://agendia-two.vercel.app/api"
       }
     }
   },

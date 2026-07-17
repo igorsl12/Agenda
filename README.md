@@ -36,20 +36,28 @@ O fluxo central: você toca no microfone, fala o compromisso, e a IA devolve um 
 
 ## Telas
 
-> 📸 _As imagens de cada tela serão adicionadas em `docs/screenshots/`._
-
-| Tela | O que faz |
-|---|---|
-| **Login / Cadastro** | Entrada por email/senha ou Google; validação e mensagens de erro amigáveis. |
-| **Onboarding** | Boas-vindas com CTA "Começar". |
-| **Início (Home)** | Saudação personalizada, contador e lista de compromissos em cartões. |
-| **Escuta (voz)** | Grava o microfone; "Preparando o microfone…" → "Gravando… fale o compromisso" → processamento. |
-| **Confirmação** | Revisão do evento extraído da voz, com Editar / Confirmar. |
-| **Detalhes** | Dados do compromisso e ações Editar / **Excluir** (com confirmação no app). |
-| **Edição** | Formulário de novo compromisso ou edição, com seletor de categoria. |
-| **Agenda** | Calendário mensal com dias selecionáveis e a lista do dia. |
-| **Histórico** | Busca + filtro por status e por categoria. |
-| **Perfil** | Nome, tema, notificações/lembretes e **Sair da conta**. |
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/01-login.png" width="230" /><br><sub><b>Login</b> — email/senha ou Google</sub></td>
+    <td align="center"><img src="docs/screenshots/02-signup.png" width="230" /><br><sub><b>Cadastro</b> — validação amigável</sub></td>
+    <td align="center"><img src="docs/screenshots/03-onboarding.png" width="230" /><br><sub><b>Onboarding</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/06-home.png" width="230" /><br><sub><b>Início</b> — lista de compromissos</sub></td>
+    <td align="center"><img src="docs/screenshots/05-new-appointment.png" width="230" /><br><sub><b>Novo compromisso</b> — com categorias</sub></td>
+    <td align="center"><img src="docs/screenshots/07-details.png" width="230" /><br><sub><b>Detalhes</b> — editar / excluir</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/11-voice.png" width="230" /><br><sub><b>Escuta</b> — agendamento por voz</sub></td>
+    <td align="center"><img src="docs/screenshots/08-delete-confirm.png" width="230" /><br><sub><b>Excluir</b> — confirmação no app</sub></td>
+    <td align="center"><img src="docs/screenshots/09-agenda.png" width="230" /><br><sub><b>Agenda</b> — calendário mensal</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/10-history.png" width="230" /><br><sub><b>Histórico</b> — busca + filtros</sub></td>
+    <td align="center"><img src="docs/screenshots/12-profile.png" width="230" /><br><sub><b>Perfil</b> — tema, lembretes, logout</sub></td>
+    <td align="center"><img src="docs/screenshots/04-home-empty.png" width="230" /><br><sub><b>Início vazio</b> — conta nova</sub></td>
+  </tr>
+</table>
 
 ## Fluxo da voz
 

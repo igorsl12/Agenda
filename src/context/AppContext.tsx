@@ -167,6 +167,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const [voiceTranscript, setVoiceTranscript] = useState('');
   const [processingLabel, setProcessingLabel] = useState('Processando...');
+  // Fluxo real: só vira true quando o microfone está capturando de fato, para
+  // a UI não pedir "fale" (nem liberar "Concluir") antes de estar gravando.
+  const [micReady, setMicReady] = useState(false);
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -451,6 +454,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const startVoiceReal = async () => {
     try {
       await startRecording();
+      setMicReady(true);
     } catch (err: unknown) {
       setVoiceError(
         err instanceof Error ? err.message : 'Falha ao acessar o microfone.',
@@ -461,6 +465,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const startVoice = () => {
     clearTimers();
     setVoiceError(null);
+    setMicReady(false);
     setListenPhase('listening');
     setTranscriptShown('');
     setScreen('listening');
@@ -612,11 +617,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         listenPhase === 'listening'
           ? IS_MOCK
             ? 'Ouvindo...'
-            : 'Gravando... fale o compromisso'
+            : micReady
+              ? 'Gravando... fale o compromisso'
+              : 'Preparando o microfone...'
           : IS_MOCK
             ? 'Processando...'
             : processingLabel,
-      showManualAdvance: !IS_MOCK && listenPhase === 'listening' && !voiceError,
+      showManualAdvance:
+        !IS_MOCK && listenPhase === 'listening' && micReady && !voiceError,
       isPhaseListening: listenPhase === 'listening',
       isPhaseProcessing: listenPhase === 'processing',
       userName: settings.userName,
@@ -644,6 +652,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       parsedEvent,
       voiceTranscript,
       processingLabel,
+      micReady,
       settings,
     ],
   );

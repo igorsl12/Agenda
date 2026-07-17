@@ -31,6 +31,31 @@ function mimeTypeForPlatform(uri: string): string {
   return 'audio/mp4';
 }
 
+/**
+ * Espera o microfone realmente começar a capturar antes de considerar a
+ * gravação pronta. Sem isso, em muitos aparelhos a primeira palavra é cortada
+ * porque o app pede "fale" antes de o hardware estar gravando de fato. Faz
+ * polling no status até acumular alguns ms de captura (ou desiste no timeout,
+ * deixando a gravação seguir mesmo assim).
+ */
+async function waitForCapture(rec: Audio.Recording): Promise<void> {
+  const MAX_WAIT_MS = 1500;
+  const POLL_MS = 50;
+  const MIN_DURATION_MS = 300;
+  const start = Date.now();
+  while (Date.now() - start < MAX_WAIT_MS) {
+    try {
+      const status = await rec.getStatusAsync();
+      if (status.isRecording && (status.durationMillis ?? 0) >= MIN_DURATION_MS) {
+        return;
+      }
+    } catch {
+      // ainda inicializando — continua tentando
+    }
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+}
+
 /** Converte um blob URI (web) em base64 puro. */
 async function blobUriToBase64(uri: string): Promise<string> {
   const response = await fetch(uri);
@@ -80,6 +105,8 @@ export async function startRecording(): Promise<void> {
 
   const { recording: rec } = await Audio.Recording.createAsync(RECORDING_OPTIONS);
   recording = rec;
+  // Só resolve quando o microfone já está capturando, evitando cortar o começo.
+  await waitForCapture(rec);
 }
 
 /** Para a gravação em andamento e devolve o áudio em base64. */

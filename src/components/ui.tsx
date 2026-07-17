@@ -297,12 +297,11 @@ export function ConfirmDialog({
         >
           {message}
         </Text>
-        <View className="flex-row" style={{ gap: 10, marginTop: 20 }}>
-          <OutlineButton label={cancelLabel} onPress={onCancel} />
+        <View className="flex-col" style={{ gap: 10, marginTop: 20 }}>
           <Pressable
             onPress={onConfirm}
-            style={{ flex: 1, backgroundColor: accent }}
-            className="h-[52px] items-center justify-center rounded-[26px] active:opacity-90"
+            style={{ width: '100%', height: 52, backgroundColor: accent }}
+            className="items-center justify-center rounded-[26px] active:opacity-90"
             accessibilityRole="button"
           >
             <Text
@@ -314,6 +313,23 @@ export function ConfirmDialog({
               }}
             >
               {confirmLabel}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onCancel}
+            style={{ width: '100%', height: 52, borderColor: colors.hairline }}
+            className="items-center justify-center rounded-[26px] border active:opacity-80"
+            accessibilityRole="button"
+          >
+            <Text
+              style={{
+                fontFamily: 'Manrope',
+                fontWeight: '700',
+                fontSize: 15,
+                color: colors.accent,
+              }}
+            >
+              {cancelLabel}
             </Text>
           </Pressable>
         </View>

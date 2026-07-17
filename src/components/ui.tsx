@@ -208,6 +208,120 @@ export function OutlineButton({
   );
 }
 
+/**
+ * Diálogo de confirmação no estilo do app (não o popup do navegador).
+ * Renderiza um overlay absoluto que cobre a moldura do app; toque no fundo
+ * cancela. Use para ações irreversíveis (ex.: excluir compromisso).
+ */
+export function ConfirmDialog({
+  visible,
+  title,
+  message,
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
+  danger,
+  onConfirm,
+  onCancel,
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const { colors } = useTheme();
+  if (!visible) return null;
+  const accent = danger ? '#DC4C4C' : colors.accent;
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 28,
+        zIndex: 50,
+      }}
+    >
+      <Pressable
+        onPress={onCancel}
+        accessibilityRole="button"
+        accessibilityLabel="Fechar"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15,23,42,0.45)',
+        }}
+      />
+      <View
+        className="bg-surface"
+        style={{
+          width: '100%',
+          maxWidth: 340,
+          borderRadius: 24,
+          padding: 24,
+          shadowColor: '#000000',
+          shadowOpacity: 0.25,
+          shadowRadius: 30,
+          shadowOffset: { width: 0, height: 16 },
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: 'Manrope',
+            fontWeight: '800',
+            fontSize: 17,
+            color: colors.ink,
+          }}
+        >
+          {title}
+        </Text>
+        <Text
+          style={{
+            fontFamily: 'Manrope',
+            fontWeight: '500',
+            fontSize: 14,
+            color: colors.muted,
+            lineHeight: 21,
+            marginTop: 8,
+          }}
+        >
+          {message}
+        </Text>
+        <View className="flex-row" style={{ gap: 10, marginTop: 20 }}>
+          <OutlineButton label={cancelLabel} onPress={onCancel} />
+          <Pressable
+            onPress={onConfirm}
+            style={{ flex: 1, backgroundColor: accent }}
+            className="h-[52px] items-center justify-center rounded-[26px] active:opacity-90"
+            accessibilityRole="button"
+          >
+            <Text
+              style={{
+                fontFamily: 'Manrope',
+                fontWeight: '700',
+                fontSize: 15,
+                color: '#FFFFFF',
+              }}
+            >
+              {confirmLabel}
+            </Text>
+          </Pressable>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 /** Campo de texto do formulário de edição. */
 export function Field({
   label,

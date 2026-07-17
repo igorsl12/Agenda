@@ -180,15 +180,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { isAuthed, user } = useAuth();
   const isAuthedRef = useRef(isAuthed);
   isAuthedRef.current = isAuthed;
-  // Última conta cujo nome já foi aplicado ao perfil (evita reaplicar a cada render).
-  const namedUserRef = useRef<string | null>(null);
+  // Espelho do usuário logado para uso dentro de efeitos assíncronos.
+  const userRef = useRef(user);
+  userRef.current = user;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      // Preferências (nome, notificações) seguem locais ao dispositivo por ora.
+      // Preferências locais ao dispositivo. A saudação/perfil, porém, refletem a
+      // conta logada: aplicamos o nome da conta ATOMICAMENTE aqui (num único
+      // setSettings), senão uma corrida sobrescreveria o nome com o default local.
       const loadedSettings = await loadSettings();
-      if (!cancelled) setSettings(loadedSettings);
+      const account = userRef.current;
+      const effectiveSettings =
+        isAuthed && account?.name?.trim()
+          ? { ...loadedSettings, userName: account.name.trim() }
+          : loadedSettings;
+      if (!cancelled) setSettings(effectiveSettings);
 
       if (isAuthed) {
         try {
@@ -220,25 +228,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [isAuthed]);
-
-  // A saudação e o perfil refletem a conta logada — não um nome de demo nem o
-  // de um usuário anterior no mesmo navegador. Aplica uma vez por conta.
-  useEffect(() => {
-    if (!isAuthed || !user) {
-      namedUserRef.current = null;
-      return;
-    }
-    if (namedUserRef.current === user.id) return;
-    namedUserRef.current = user.id;
-    const accountName = (user.name || '').trim();
-    if (!accountName) return;
-    setSettings((prev) => {
-      if (prev.userName === accountName) return prev;
-      const next = { ...prev, userName: accountName };
-      void saveSettings(next);
-      return next;
-    });
-  }, [isAuthed, user]);
 
   // Reagenda lembretes quando compromissos ou preferências mudam.
   useEffect(() => {

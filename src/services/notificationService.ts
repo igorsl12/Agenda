@@ -1,8 +1,12 @@
 // notificationService.ts — lembretes de compromisso.
 //
-// Nativo (iOS/Android): expo-notifications com agendamento local real.
-// Web: Notification API do navegador + setTimeout (funciona enquanto a
-// aba estiver aberta — limitação da plataforma, suficiente p/ protótipo).
+// Nativo (iOS/Android): expo-notifications com agendamento local real,
+// registrado no sistema — dispara mesmo com o app fechado.
+// Web: Notification API do navegador + setTimeout. ATENÇÃO: no web o timer só
+// roda enquanto a aba/app está aberta; quando o app é fechado o navegador
+// suspende o timer e o lembrete NÃO dispara. Notificação em segundo plano na
+// web exige Web Push (service worker + servidor) — não coberto aqui. Para
+// lembretes confiáveis, use o build nativo.
 //
 // Estratégia de sincronização: em vez de rastrear ids por compromisso,
 // cancela tudo e reagenda a partir da lista atual — simples e à prova
@@ -16,6 +20,10 @@ import type { UserSettings } from '../storage/settingsStorage';
 import { fromISO } from '../utils/appointmentUtils';
 
 const ONE_HOUR_MS = 60 * 60 * 1000;
+
+// Canal Android: sem um canal de alta importância o SO pode silenciar ou não
+// exibir o heads-up. Necessário no Android 8+.
+const ANDROID_CHANNEL_ID = 'reminders';
 
 // Timers ativos no web (id → timeout).
 const webTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -37,6 +45,25 @@ if (Platform.OS !== 'web') {
     }),
   });
 }
+
+/** Cria/atualiza o canal de notificação do Android (idempotente). */
+async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+      name: 'Lembretes de compromisso',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: 'default',
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#2E6BF0',
+    });
+  } catch (err) {
+    console.warn('[notifications] canal Android falhou:', err);
+  }
+}
+
+// Registra o canal já no carregamento (não bloqueante).
+void ensureAndroidChannel();
 
 /** Data/hora efetiva do compromisso (dateISO + time HH:MM). */
 export function appointmentDateTime(appt: Appointment): Date | null {
@@ -115,6 +142,8 @@ export async function syncAppointmentReminders(
     const granted = await ensureNotificationPermission();
     if (!granted) return;
 
+    await ensureAndroidChannel();
+
     const now = Date.now();
     for (const appt of appointments) {
       const at = appointmentDateTime(appt);
@@ -130,8 +159,12 @@ export async function syncAppointmentReminders(
         scheduleWeb(appt.id, title, body, fireAt);
       } else if (!IS_EXPO_GO) {
         await Notifications.scheduleNotificationAsync({
-          content: { title, body, sound: true },
-          trigger: { type: SchedulableTriggerInputTypes.DATE, date: fireAt },
+          content: { title, body, sound: 'default' },
+          trigger: {
+            type: SchedulableTriggerInputTypes.DATE,
+            date: fireAt,
+            channelId: Platform.OS === 'android' ? ANDROID_CHANNEL_ID : undefined,
+          },
         });
       }
     }

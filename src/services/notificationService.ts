@@ -148,9 +148,15 @@ export async function syncAppointmentReminders(
     for (const appt of appointments) {
       const at = appointmentDateTime(appt);
       if (!at) continue;
-      const fireAt = settings.remindOneHourBefore
+      let fireAt = settings.remindOneHourBefore
         ? new Date(at.getTime() - ONE_HOUR_MS)
         : at;
+      // Se o lembrete de "1h antes" já passou mas o evento ainda é futuro
+      // (compromisso criado com menos de 1h de antecedência), lembra no próprio
+      // horário do evento em vez de descartar o alerta.
+      if (fireAt.getTime() <= now && at.getTime() > now) {
+        fireAt = at;
+      }
       if (fireAt.getTime() <= now) continue;
 
       const title = 'Lembrete de compromisso';

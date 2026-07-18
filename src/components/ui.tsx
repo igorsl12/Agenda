@@ -147,8 +147,10 @@ export function GradientButton({
     <Pressable
       onPress={onPress}
       disabled={disabled}
-      style={{ flex: flex ?? 1, opacity: disabled ? 0.5 : 1 }}
-      className="h-[52px] items-center justify-center rounded-[26px] active:opacity-90"
+      // height explícito (não só via className): no nativo, flex:1 num container
+      // em coluna colapsa a altura; sem flex, a altura fixa garante o render.
+      style={{ flex, height: 52, opacity: disabled ? 0.5 : 1 }}
+      className="items-center justify-center rounded-[26px] active:opacity-90"
       accessibilityRole="button"
     >
       <LinearGradient
@@ -190,8 +192,10 @@ export function OutlineButton({
   return (
     <Pressable
       onPress={onPress}
-      style={{ flex: flex ?? 1, borderColor: danger ? '#DC4C4C' : colors.hairline }}
-      className="h-[52px] items-center justify-center rounded-[26px] border active:opacity-80"
+      // height explícito (ver GradientButton): flex:1 padrão colapsava a altura
+      // no nativo quando o botão fica em coluna (ex.: Detalhes, Edição).
+      style={{ flex, height: 52, borderColor: danger ? '#DC4C4C' : colors.hairline }}
+      className="items-center justify-center rounded-[26px] border active:opacity-80"
       accessibilityRole="button"
     >
       <Text

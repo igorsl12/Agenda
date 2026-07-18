@@ -4,7 +4,10 @@
 // startRecording() / stopRecording() e recebe o áudio pronto em base64.
 import { Audio } from 'expo-av';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system';
+// SDK 54: o expo-file-system v19 trocou a API padrão; readAsStringAsync agora
+// vive em 'expo-file-system/legacy'. Sem este import o caminho NATIVO quebra
+// (no web não aparece porque usa blobUriToBase64).
+import * as FileSystem from 'expo-file-system/legacy';
 
 export interface RecordedAudio {
   /** Conteúdo do áudio codificado em base64 (sem prefixo data:). */

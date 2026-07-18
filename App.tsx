@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text } from 'react-native';
 import { useFonts } from 'expo-font';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Manrope_400Regular, Manrope_500Medium, Manrope_600SemiBold, Manrope_700Bold, Manrope_800ExtraBold } from '@expo-google-fonts/manrope';
 import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 import { AppProvider, useApp } from './src/context/AppContext';
@@ -24,6 +25,10 @@ import { cn } from './src/utils/cn';
 /** Moldura "device" no web: limita a largura e centraliza. */
 function DeviceFrame({ children }: { children: React.ReactNode }) {
   const { isDark, colors } = useTheme();
+  // No Android (SDK 54) o app roda edge-to-edge: o conteúdo passa por baixo da
+  // barra de navegação do sistema. Sem este padding o rodapé (botão Salvar,
+  // BottomNav) fica escondido atrás da barra de gestos. No web insets = 0.
+  const insets = useSafeAreaInsets();
   return (
     <View
       style={{
@@ -46,6 +51,7 @@ function DeviceFrame({ children }: { children: React.ReactNode }) {
           borderBottomLeftRadius: 28,
           borderBottomRightRadius: 28,
           overflow: 'hidden',
+          paddingBottom: insets.bottom,
           shadowColor: '#000000',
           shadowOpacity: 0.18,
           shadowRadius: 20,
@@ -131,14 +137,16 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <AppProvider>
-          <DeviceFrame>
-            <Router />
-          </DeviceFrame>
-        </AppProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppProvider>
+            <DeviceFrame>
+              <Router />
+            </DeviceFrame>
+          </AppProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

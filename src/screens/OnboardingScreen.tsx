@@ -52,8 +52,8 @@ export function OnboardingScreen() {
           </LinearGradient>
         </View>
         <View style={{ marginTop: 6, alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 34, color: colors.ink, letterSpacing: -0.5 }}>Agenda</Text>
-          <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 16, color: colors.accent, marginTop: 4 }}>Dinâmica Inteligente</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '800', fontSize: 34, color: colors.ink, letterSpacing: -0.5 }}>AgendIA</Text>
+          <Text style={{ fontFamily: 'Manrope', fontWeight: '600', fontSize: 16, color: colors.accent, marginTop: 4 }}>Agenda Dinâmica Inteligente</Text>
         </View>
         <Text style={{ fontFamily: 'Manrope', fontSize: 15, lineHeight: 24, color: colors.muted, maxWidth: 270, textAlign: 'center', marginTop: 2 }}>
           Marque seus compromissos só com a sua voz. Fale naturalmente e a IA organiza tudo para você.

@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="assets/icon.png" alt="Agenda Dinâmica Inteligente" width="112" height="112" />
+<img src="assets/icon.png" alt="AgendIA" width="112" height="112" />
 
-# Agenda Dinâmica Inteligente
+# AgendIA — Agenda Dinâmica Inteligente
 
 **Marque seus compromissos só com a voz.** Fale naturalmente — o app grava, a IA transcreve e extrai os dados do compromisso (título, data, horário, local, categoria), você confirma e pronto.
 

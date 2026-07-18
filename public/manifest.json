@@ -1,6 +1,6 @@
 {
-  "name": "Agenda Inteligente",
-  "short_name": "Agenda",
+  "name": "AgendIA",
+  "short_name": "AgendIA",
   "description": "Sua agenda de compromissos por voz.",
   "start_url": "/",
   "scope": "/",

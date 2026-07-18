@@ -10,9 +10,15 @@ import { statusStyle, categoryStyle, isoToFriendly, mixWithBase } from '../utils
 export function AppointmentCard({
   appt,
   onPress,
+  onLongPress,
+  selectionMode = false,
+  selected = false,
 }: {
   appt: Appointment;
   onPress: () => void;
+  onLongPress?: () => void;
+  selectionMode?: boolean;
+  selected?: boolean;
 }) {
   const { colors, isDark } = useTheme();
   const { bg, color } = statusStyle(appt.status);
@@ -20,9 +26,12 @@ export function AppointmentCard({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={1000}
       className="mb-3 flex-row items-center gap-3.5 rounded-[20px] border bg-surface p-4 active:opacity-90"
       style={{
-        borderColor: colors.hairline,
+        borderColor: selected ? colors.accent : colors.hairline,
+        borderWidth: selected ? 2 : 1,
         shadowColor: colors.accent,
         shadowOpacity: 0.08,
         shadowRadius: 24,
@@ -30,6 +39,7 @@ export function AppointmentCard({
       }}
       accessibilityRole="button"
       accessibilityLabel={appt.title}
+      accessibilityState={selectionMode ? { selected } : undefined}
     >
       <Avatar initials={appt.initials} color={appt.color} size={48} />
       <View className="flex-1" style={{ minWidth: 0 }}>
@@ -66,7 +76,26 @@ export function AppointmentCard({
         <View style={{ backgroundColor: bg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
           <Text style={{ fontFamily: 'Manrope', fontWeight: '700', fontSize: 10.5, color }}>{appt.status}</Text>
         </View>
-        <ChevronRight />
+        {selectionMode ? (
+          <View
+            style={{
+              width: 24,
+              height: 24,
+              borderRadius: 12,
+              borderWidth: 2,
+              borderColor: selected ? colors.accent : colors.hairline,
+              backgroundColor: selected ? colors.accent : 'transparent',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {selected ? (
+              <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '800', lineHeight: 15 }}>✓</Text>
+            ) : null}
+          </View>
+        ) : (
+          <ChevronRight />
+        )}
       </View>
     </Pressable>
   );

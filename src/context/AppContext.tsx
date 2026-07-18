@@ -98,6 +98,13 @@ interface AppContextValue extends AppState {
   openAddNew: () => void;
   openEditExisting: (id?: string) => void;
   deleteSelected: (id?: string) => void;
+  // seleção múltipla
+  selectionMode: boolean;
+  selectedIds: string[];
+  startSelection: (id: string) => void;
+  toggleSelection: (id: string) => void;
+  clearSelection: () => void;
+  deleteSelectedMany: () => void;
   saveForm: () => void;
   historyFilter: 'todas' | 'Confirmado' | 'Pendente';
   setHistoryFilter: (f: 'todas' | 'Confirmado' | 'Pendente') => void;
@@ -154,6 +161,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
   const [transcriptShown, setTranscriptShown] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Seleção múltipla (long-press na Home) para excluir vários de uma vez.
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editMode, setEditMode] = useState<
     'new' | 'edit-existing' | 'voice-edit'
   >('new');
@@ -378,6 +388,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setSelectedId(null);
     setScreen('home');
   };
+
+  // ---- seleção múltipla ----
+  const startSelection = (id: string) => {
+    setSelectionMode(true);
+    setSelectedIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id];
+      if (next.length === 0) setSelectionMode(false);
+      return next;
+    });
+  };
+  const clearSelection = () => {
+    setSelectionMode(false);
+    setSelectedIds([]);
+  };
+  /** Exclui todos os compromissos selecionados de uma vez. */
+  const deleteSelectedMany = async () => {
+    const ids = selectedIds;
+    if (ids.length === 0) return;
+    const idSet = new Set(ids);
+    const next = appointments.filter((a) => !idSet.has(a.id));
+    setAppointments(next);
+    if (!isAuthedRef.current) saveAppointments(next);
+    clearSelection();
+    await Promise.all(ids.map((id) => persistDelete(id)));
+  };
+
   const saveForm = async () => {
     const dateISO = form.dateISO || isoInDays(0);
     const dateFriendly = form.date || isoToFriendly(dateISO);
@@ -582,6 +623,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       openAddNew,
       openEditExisting,
       deleteSelected,
+      selectionMode,
+      selectedIds,
+      startSelection,
+      toggleSelection,
+      clearSelection,
+      deleteSelectedMany,
       saveForm,
       historyFilter,
       setHistoryFilter,
@@ -630,6 +677,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       listenPhase,
       transcriptShown,
       selectedId,
+      selectionMode,
+      selectedIds,
       editMode,
       form,
       appointments,

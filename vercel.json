@@ -15,6 +15,10 @@
       "destination": "/api/extract"
     },
     {
+      "source": "/api/appointments/:id",
+      "destination": "/api/appointments?id=:id"
+    },
+    {
       "source": "/:path*",
       "destination": "/index.html"
     }

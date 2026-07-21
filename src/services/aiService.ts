@@ -16,6 +16,16 @@ import {
   isoToFriendly,
   toISO,
 } from '../utils/appointmentUtils';
+
+/**
+ * Data local do dispositivo (YYYY-MM-DD) enviada ao proxy para resolver termos
+ * relativos como "amanhã". O servidor (Vercel) roda em UTC; sem isto, à noite
+ * no Brasil (UTC−3) o "hoje" do servidor já é o dia seguinte e "amanhã" cai
+ * dois dias à frente. Quem sabe a data certa é o aparelho do usuário.
+ */
+export function localTodayISO(now: Date = new Date()): string {
+  return toISO(now);
+}
 import type { RecordedAudio } from './recorderService';
 
 export type AiProvider = 'mock' | 'gemini' | 'openai' | 'groq' | 'proxy';
@@ -269,7 +279,12 @@ async function extractWithProxy(audio: RecordedAudio): Promise<VoiceExtraction> 
         'Content-Type': 'application/json',
         ...(proxyToken ? { 'X-Proxy-Token': proxyToken } : {}),
       },
-      body: JSON.stringify({ base64: audio.base64, mimeType: audio.mimeType }),
+      body: JSON.stringify({
+        base64: audio.base64,
+        mimeType: audio.mimeType,
+        // Data local do aparelho: o servidor a usa como "hoje" no prompt.
+        todayISO: localTodayISO(),
+      }),
     });
   } catch {
     throw new Error(

@@ -11,6 +11,7 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { BackHandler, Platform } from 'react-native';
 import type {
   Appointment,
   AppointmentCategory,
@@ -89,6 +90,7 @@ interface AppContextValue extends AppState {
   // navegação
   goOnboardNext: () => void;
   goHome: () => void;
+  goBack: () => boolean;
   setTabHome: () => void;
   setTabAgenda: () => void;
   setTabPerfil: () => void;
@@ -272,24 +274,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ---- navegação ----
-  const goOnboardNext = () => setScreen('home');
-  const goHome = () => setScreen('home');
-  const setTabHome = () => {
-    setTab('home');
-    setScreen('home');
+  // Pilha de histórico: cada transição de tela guarda o par {screen, tab} de
+  // onde veio, para que "voltar" (botão da UI ou botão físico do Android)
+  // restaure EXATAMENTE a tela E a aba anteriores — sem cair na Home com o
+  // ícone de outra aba selecionado.
+  type NavEntry = { screen: ScreenName; tab: TabName };
+  const historyRef = useRef<NavEntry[]>([]);
+  // Espelhos vivos de screen/tab para leitura dentro de closures (BackHandler).
+  const screenRef = useRef(screen);
+  screenRef.current = screen;
+  const tabRef = useRef(tab);
+  tabRef.current = tab;
+  const MAX_HISTORY = 50;
+
+  /** Empilha o estado atual e navega para a nova tela (opcionalmente aba). */
+  const push = (nextScreen: ScreenName, nextTab?: TabName) => {
+    // Evita empilhar navegações redundantes (tocar na aba já ativa, etc.).
+    if (
+      screenRef.current === nextScreen &&
+      (nextTab === undefined || tabRef.current === nextTab)
+    ) {
+      return;
+    }
+    const stack = historyRef.current;
+    stack.push({ screen: screenRef.current, tab: tabRef.current });
+    if (stack.length > MAX_HISTORY) stack.shift();
+    setScreen(nextScreen);
+    if (nextTab !== undefined) setTab(nextTab);
   };
-  const setTabAgenda = () => {
-    setTab('agenda');
-    setScreen('agenda');
+  /** Troca a tela atual sem empilhar (a anterior não deve ser revisitada). */
+  const replace = (nextScreen: ScreenName, nextTab?: TabName) => {
+    setScreen(nextScreen);
+    if (nextTab !== undefined) setTab(nextTab);
   };
-  const setTabPerfil = () => {
-    setTab('perfil');
-    setScreen('perfil');
+  /** Zera o histórico e vai para uma tela raiz (fim de fluxo). */
+  const resetTo = (nextScreen: ScreenName, nextTab?: TabName) => {
+    historyRef.current = [];
+    setScreen(nextScreen);
+    if (nextTab !== undefined) setTab(nextTab);
   };
-  const openHistory = () => {
-    setTab('historico');
-    setScreen('historico');
+  /** Desempilha e restaura tela+aba. Retorna false se não havia para onde voltar. */
+  const goBack = (): boolean => {
+    const prev = historyRef.current.pop();
+    if (!prev) return false;
+    setScreen(prev.screen);
+    setTab(prev.tab);
+    return true;
   };
+
+  const goOnboardNext = () => resetTo('home', 'home');
+  const goHome = () => resetTo('home', 'home');
+  const setTabHome = () => push('home', 'home');
+  const setTabAgenda = () => push('agenda', 'agenda');
+  const setTabPerfil = () => push('perfil', 'perfil');
+  const openHistory = () => push('historico', 'historico');
 
   // ---- persistência híbrida (banco quando logado, AsyncStorage offline) ----
   /** Cria no banco se logado; senão retorna o próprio (fica local). */
@@ -348,12 +386,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // ---- compromissos ----
   const selectAppointment = (id: string) => {
     setSelectedId(id);
-    setScreen('details');
+    // Mantém a aba atual (agenda/histórico/home): voltar retorna para ela.
+    push('details');
   };
   const openAddNew = () => {
     setEditMode('new');
     setForm(blankForm());
-    setScreen('edit');
+    push('edit');
   };
   // Usa `current` (compromisso em tela) como fonte do id, tornando a ação
   // independente de possíveis dessincronizações de `selectedId`.
@@ -374,7 +413,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notes: appt.notes || '',
       category: appt.category,
     });
-    setScreen('edit');
+    push('edit');
   };
   const deleteSelected = async (id?: string) => {
     const appt =
@@ -386,7 +425,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthedRef.current) saveAppointments(next);
     await persistDelete(appt.id);
     setSelectedId(null);
-    setScreen('home');
+    // Item removido: volta para a Home limpando o histórico (não faz sentido
+    // "voltar" para os detalhes de algo que não existe mais).
+    resetTo('home', 'home');
   };
 
   // ---- seleção múltipla ----
@@ -437,7 +478,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       );
       setAppointments(next);
       if (!isAuthedRef.current) saveAppointments(next);
-      setScreen('details');
+      // Entrar no form empilhou {details, aba de origem}; voltar para os
+      // detalhes consome exatamente essa entrada, mantendo a aba de origem
+      // logo abaixo na pilha (voltar de novo leva à agenda/histórico).
+      if (!goBack()) resetTo('details');
     } else {
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const title = form.title || 'Novo compromisso';
@@ -455,7 +499,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const next = [saved, ...appointments];
       setAppointments(next);
       if (!isAuthedRef.current) saveAppointments(next);
-      setScreen('home');
+      resetTo('home', 'home');
     }
   };
 
@@ -475,7 +519,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const t3 = setTimeout(() => {
       setParsedEvent(voiceService.extractEvent());
       setVoiceTranscript(voiceService.fullTranscript());
-      setScreen('confirm');
+      replace('confirm');
     }, revealDone + 1300);
     timers.current.push(t3);
   };
@@ -498,7 +542,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setMicReady(false);
     setListenPhase('listening');
     setTranscriptShown('');
-    setScreen('listening');
+    if (screenRef.current !== 'listening') push('listening');
     if (IS_MOCK) {
       startVoiceMock();
     } else {
@@ -510,7 +554,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     clearTimers();
     if (!IS_MOCK) void discardRecording();
     setVoiceError(null);
-    setScreen('home');
+    // Volta para a tela de onde a gravação foi iniciada (home/agenda/etc).
+    if (!goBack()) resetTo('home', 'home');
   };
 
   /** Mock: pula direto para a confirmação. Real: para de gravar e processa. */
@@ -519,7 +564,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (IS_MOCK) {
       setParsedEvent(voiceService.extractEvent());
       setVoiceTranscript(voiceService.fullTranscript());
-      setScreen('confirm');
+      // Substitui 'listening' (tela transitória) por 'confirm' no lugar.
+      replace('confirm');
       return;
     }
     void (async () => {
@@ -540,7 +586,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setParsedEvent(result.event);
         setVoiceTranscript(result.transcript);
         setTranscriptShown(result.transcript);
-        setScreen('confirm');
+        replace('confirm');
       } catch (err: unknown) {
         clearTimers();
         setVoiceError(
@@ -570,16 +616,46 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setAppointments(next);
     if (!isAuthedRef.current) saveAppointments(next);
     setParsedEvent(null);
-    setScreen('home');
+    resetTo('home', 'home');
   };
   const editVoiceEvent = () => {
     setEditMode('voice-edit');
     setForm({ ...(parsedEvent ?? voiceService.extractEvent()) });
-    setScreen('edit');
+    push('edit');
   };
   const backFromEdit = () => {
-    setScreen(editMode === 'edit-existing' ? 'details' : 'home');
+    // Volta para a tela anterior real (detalhes, confirmação ou aba de origem).
+    if (!goBack()) resetTo('home', 'home');
   };
+
+  // Botão físico "voltar" do Android: sem isto o sistema fecha o app em vez de
+  // voltar uma tela. Registrado uma única vez; usa refs para ler o estado atual.
+  // Só no nativo — na web o BackHandler é um stub que apenas loga erro.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const onHardwareBack = (): boolean => {
+      const s = screenRef.current;
+      // Na tela de voz, "voltar" equivale a cancelar (descarta a gravação).
+      if (s === 'listening') {
+        cancelVoice();
+        return true;
+      }
+      if (goBack()) return true;
+      // Sem histórico: se não estiver na Home, vai para ela; senão deixa o
+      // sistema fechar o app (comportamento esperado na tela raiz).
+      if (s !== 'home') {
+        resetTo('home', 'home');
+        return true;
+      }
+      return false;
+    };
+    const sub = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onHardwareBack,
+    );
+    return () => sub.remove();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ---- form ----
   const setField = (key: Exclude<keyof AppointmentForm, 'category'>, val: string) => {
@@ -615,6 +691,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       loading,
       goOnboardNext,
       goHome,
+      goBack,
       setTabHome,
       setTabAgenda,
       setTabPerfil,

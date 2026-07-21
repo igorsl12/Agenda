@@ -9,7 +9,7 @@ import { statusStyle, categoryStyle, isoToFriendly, mixWithBase } from '../utils
 
 export function DetailsScreen() {
   const { colors, isDark } = useTheme();
-  const { current, goHome, openEditExisting, deleteSelected } = useApp();
+  const { current, goBack, openEditExisting, deleteSelected } = useApp();
   const [confirmingDelete, setConfirmingDelete] = React.useState(false);
 
   if (!current) {
@@ -30,7 +30,7 @@ export function DetailsScreen() {
       <View className="flex-1">
         <View className="flex-row items-center gap-3.5 px-6" style={{ paddingTop: 64, paddingBottom: 8 }}>
           <Pressable
-            onPress={goHome}
+            onPress={goBack}
             className="items-center justify-center rounded-full bg-surface"
             style={{ width: 36, height: 36, shadowColor: colors.ink, shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 6 } }}
             accessibilityRole="button"

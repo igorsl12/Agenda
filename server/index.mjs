@@ -76,9 +76,16 @@ function toISO(now) {
   return `${y}-${m}-${d}`;
 }
 
-function buildExtractionPrompt(now) {
-  const todayISO = toISO(now);
-  const weekday = PT_WEEKDAYS[now.getDay()];
+// Dia da semana (0=domingo) de uma data YYYY-MM-DD sem shift de fuso.
+function weekdayOfISO(todayISO) {
+  return new Date(`${todayISO}T12:00:00Z`).getUTCDay();
+}
+
+// `todayISO` é a data LOCAL do dispositivo do usuário (enviada pelo app), fonte
+// de verdade para "hoje" — evita usar o UTC do servidor, que à noite no Brasil
+// já virou o dia seguinte e joga "amanhã" dois dias à frente.
+function buildExtractionPrompt(todayISO) {
+  const weekday = PT_WEEKDAYS[weekdayOfISO(todayISO)];
   return [
     'Você é um assistente que agenda compromissos a partir da fala do usuário (português do Brasil).',
     `Hoje é ${weekday}, ${todayISO}.`,
@@ -116,7 +123,7 @@ class FriendlyError extends Error {
   }
 }
 
-async function extractWithGemini(base64, mimeType) {
+async function extractWithGemini(base64, mimeType, todayISO) {
   const response = await fetch(GEMINI_URL, {
     method: 'POST',
     headers: {
@@ -127,7 +134,7 @@ async function extractWithGemini(base64, mimeType) {
       contents: [
         {
           parts: [
-            { text: buildExtractionPrompt(new Date()) },
+            { text: buildExtractionPrompt(todayISO) },
             { inline_data: { mime_type: mimeType, data: base64 } },
           ],
         },
@@ -150,7 +157,7 @@ async function extractWithGemini(base64, mimeType) {
 }
 
 /** Fluxo Whisper + chat para APIs compatíveis com a da OpenAI (OpenAI, Groq). */
-async function extractWithOpenAICompatible(base64, mimeType, cfg) {
+async function extractWithOpenAICompatible(base64, mimeType, cfg, todayISO) {
   // 1) Transcrição: áudio → texto
   const ext = mimeType.includes('webm') ? 'webm' : 'm4a';
   const form = new FormData();
@@ -192,7 +199,7 @@ async function extractWithOpenAICompatible(base64, mimeType, cfg) {
       temperature: 0.1,
       response_format: { type: 'json_object' },
       messages: [
-        { role: 'system', content: buildExtractionPrompt(new Date()) },
+        { role: 'system', content: buildExtractionPrompt(todayISO) },
         { role: 'user', content: transcript },
       ],
     }),
@@ -275,7 +282,13 @@ function parseExtractRequest(rawBody) {
   if (!/^audio\/[\w.+-]+$/.test(mimeType)) {
     throw new FriendlyError('Campo "mimeType" ausente ou não é um tipo de áudio.', 400);
   }
-  return { base64, mimeType };
+  // Data local do app (validada). Fallback para o UTC do servidor só se o app
+  // (build antigo) não enviar — não reintroduz o bug para clientes atualizados.
+  const todayISO =
+    typeof data?.todayISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(data.todayISO)
+      ? data.todayISO
+      : toISO(new Date());
+  return { base64, mimeType, todayISO };
 }
 
 const CORS_HEADERS = {
@@ -303,15 +316,16 @@ async function handleExtract(req, res) {
     return;
   }
 
-  const { base64, mimeType } = parseExtractRequest(await readBody(req));
+  const { base64, mimeType, todayISO } = parseExtractRequest(await readBody(req));
 
   const raw =
     provider === 'gemini'
-      ? await extractWithGemini(base64, mimeType)
+      ? await extractWithGemini(base64, mimeType, todayISO)
       : await extractWithOpenAICompatible(
           base64,
           mimeType,
           provider === 'groq' ? groqConfig() : openAIConfig(),
+          todayISO,
         );
 
   sendJson(res, 200, { raw });

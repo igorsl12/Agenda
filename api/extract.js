@@ -52,12 +52,20 @@ const CATEGORY_OPTIONS = [
   'outro (Outro)',
 ].join(', ');
 
-function buildExtractionPrompt(now) {
-  const todayISO = now.toISOString().slice(0, 10);
+// Dia da semana (0=domingo) de uma data YYYY-MM-DD, independente de timezone:
+// interpreta a data ao meio-dia UTC e lê getUTCDay, evitando shift de fuso.
+function weekdayOfISO(todayISO) {
+  return new Date(`${todayISO}T12:00:00Z`).getUTCDay();
+}
+
+// `todayISO` (YYYY-MM-DD) é a data LOCAL do dispositivo do usuário, enviada
+// pelo app. É a fonte de verdade para "hoje" — sem ela cairíamos no UTC do
+// servidor (Vercel), que à noite no Brasil já virou o dia seguinte.
+function buildExtractionPrompt(todayISO) {
   const wd = [
     'domingo', 'segunda-feira', 'terça-feira', 'quarta-feira',
     'quinta-feira', 'sexta-feira', 'sábado',
-  ][now.getDay()];
+  ][weekdayOfISO(todayISO)];
   return [
     'Você é um assistente que agenda compromissos a partir da fala do usuário (português do Brasil).',
     `Hoje é ${wd}, ${todayISO}.`,
@@ -143,6 +151,13 @@ module.exports = async function handler(req, res) {
     }
     const base64 = typeof body.base64 === 'string' ? body.base64.trim() : '';
     const mimeType = typeof body.mimeType === 'string' ? body.mimeType.trim() : '';
+    // Data local do app (validada). Fallback para o UTC do servidor só se o app
+    // (build antigo) não enviar — mantém compatibilidade sem reintroduzir o bug
+    // para clientes atualizados.
+    const todayISO =
+      typeof body.todayISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.todayISO)
+        ? body.todayISO
+        : new Date().toISOString().slice(0, 10);
     if (!base64 || !/^[A-Za-z0-9+/=]+$/.test(base64)) {
       return res.status(400).json({ error: 'Campo "base64" ausente ou inválido.' });
     }
@@ -187,7 +202,7 @@ module.exports = async function handler(req, res) {
         temperature: 0.1,
         response_format: { type: 'json_object' },
         messages: [
-          { role: 'system', content: buildExtractionPrompt(new Date()) },
+          { role: 'system', content: buildExtractionPrompt(todayISO) },
           { role: 'user', content: transcript },
         ],
       }),

@@ -32,10 +32,12 @@ yarn-error.log*
 .cache/
 .metro-health-check*
 
-# Editores / IDEs
+# Editores / IDEs / ferramentas locais
 .vscode/
 .idea/
 *.swp
+.claude/
+graphify-out/
 
 # Artefatos de build do SO
 .DS_Store
